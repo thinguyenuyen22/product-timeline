@@ -34,7 +34,7 @@ export function renderReportView(
 
   const categories = Array.from(
     new Set(cycleProducts.map((p) => p.category.trim()).filter(Boolean))
-  ).sort((a, b) => a.localeCompare(b, 'vi'));
+  ).sort((a, b) => a.localeCompare(b, 'en'));
 
   const products = (
     filter.category
@@ -121,7 +121,7 @@ export function renderReportView(
   }
 
   const overallPct = totalTasks ? Math.round((totalDone / totalTasks) * 100) : 0;
-  const pics = Array.from(picSet).sort((a, b) => a.localeCompare(b, 'vi'));
+  const pics = Array.from(picSet).sort((a, b) => a.localeCompare(b, 'en'));
 
   const filteredActions = actionItems
     .filter((item) => {
@@ -136,7 +136,7 @@ export function renderReportView(
     });
 
   const cycleLabel =
-    filter.cycleMode === 'all' ? 'Tất cả chu kỳ' : `Chu kỳ ${formatCycleLabel(currentCycle)}`;
+    filter.cycleMode === 'all' ? 'All Cycles' : `Cycle ${formatCycleLabel(currentCycle)}`;
 
   const matrixRows = products
     .map((p) => {
@@ -164,7 +164,7 @@ export function renderReportView(
             : prog > 0 || done > 0
             ? 'stage-prog'
             : 'stage-not';
-        return `<td class="num stage-cell ${cls}" title="${esc(STAGES[si])}: ${done}/${ts.length}${late ? `, ${late} trễ` : ''}">
+        return `<td class="num stage-cell ${cls}" title="${esc(STAGES[si])}: ${done}/${ts.length}${late ? `, ${late} overdue` : ''}">
           <div class="stage-ratio">${done}/${ts.length}${late ? `<span class="stage-late-mark"> !${late}</span>` : ''}</div>
           <div class="mini-bar"><i style="width:${pct}%"></i></div>
         </td>`;
@@ -172,22 +172,22 @@ export function renderReportView(
 
       const rdSummary = primarySample
         ? `<div class="mono-sm"><strong>${esc(primarySample.rdCode)}</strong>${
-            primarySample.isApproved ? ' · Chốt' : ''
+            primarySample.isApproved ? ' · Approved' : ''
           }</div>
            <div class="mut mono-sm">${fmtMoney(primarySample.cvsPrice)} / ${fmtMoney(primarySample.sellPrice)}</div>`
-        : `<span class="mut">Chưa có mẫu</span>`;
+        : `<span class="mut">No samples</span>`;
 
       const rowStatus =
         stats.counts.late > 0
-          ? `<span class="status-txt status-late">Trễ ${stats.counts.late} việc</span>`
+          ? `<span class="status-txt status-late">${stats.counts.late} overdue</span>`
           : stats.pct === 100 && stats.total > 0
-          ? `<span class="status-txt status-done">Hoàn tất</span>`
-          : `<span class="status-txt status-prog">Đúng tiến độ</span>`;
+          ? `<span class="status-txt status-done">Completed</span>`
+          : `<span class="status-txt status-prog">On Track</span>`;
 
       return `<tr class="clickable-row" data-open-product="${esc(p.id)}">
         <td class="col-prod">
           <div class="prod-name">${esc(p.name)}</div>
-          <div class="mut">${esc(p.category || 'Chưa phân nhóm')} · ${formatCycleLabel(p.cycleStartYear)}</div>
+          <div class="mut">${esc(p.category || 'Uncategorized')} · ${formatCycleLabel(p.cycleStartYear)}</div>
         </td>
         <td class="num">${fmtDate(p.launch, true)}</td>
         <td>${rdSummary}</td>
@@ -203,12 +203,12 @@ export function renderReportView(
   const actionRows = filteredActions
     .map((item) => {
       const dueText = item.isLate
-        ? `<span class="status-txt status-late">Trễ ${Math.abs(item.diffDays)} ngày</span>`
+        ? `<span class="status-txt status-late">${Math.abs(item.diffDays)}d overdue</span>`
         : item.task.end
         ? item.diffDays === 0
-          ? `<span class="status-txt status-prog">Hôm nay</span>`
-          : `<span class="status-txt status-prog">Còn ${item.diffDays} ngày</span>`
-        : `<span class="mut">Chưa gán hạn</span>`;
+          ? `<span class="status-txt status-prog">Due today</span>`
+          : `<span class="status-txt status-prog">In ${item.diffDays}d</span>`
+        : `<span class="mut">No due date</span>`;
 
       return `<tr>
         <td>
@@ -219,7 +219,7 @@ export function renderReportView(
         </td>
         <td class="mut">${esc(item.stageName)}</td>
         <td>
-          <div>${item.task.isMilestone ? '<span class="milestone-mark" title="Mốc chốt">◆</span> ' : ''}${esc(
+          <div>${item.task.isMilestone ? '<span class="milestone-mark" title="Key Milestone">◆</span> ' : ''}${esc(
         item.task.name
       )}</div>
           ${item.task.note ? `<div class="mut">${esc(item.task.note)}</div>` : ''}
@@ -232,7 +232,7 @@ export function renderReportView(
             ? `<td class="no-print">
                 <button type="button" class="btn-sm" data-quick-done="${esc(item.productId)}:${esc(
                 item.task.id
-              )}">Hoàn thành</button>
+              )}">Mark Done</button>
               </td>`
             : ''
         }
@@ -243,16 +243,16 @@ export function renderReportView(
   const legacyBanner =
     editMode && legacyLocalCount > 0 && allProducts.length === 0
       ? `<div class="pick-banner no-print" style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
-          <span>Phát hiện <strong>${legacyLocalCount}</strong> sản phẩm đã lưu trước đây trên trình duyệt này. Đồng bộ lên Cloud SQL để Sếp và team R&amp;D cùng xem được.</span>
-          <button type="button" class="btn-sm btn-pri" data-action="sync-legacy">Đồng bộ lên Cloud SQL</button>
+          <span>Detected <strong>${legacyLocalCount}</strong> locally saved products in this browser. Sync them to Cloud SQL so leadership and R&amp;D can view shared data.</span>
+          <button type="button" class="btn-sm btn-pri" data-action="sync-legacy">Sync to Cloud SQL</button>
         </div>`
       : '';
 
   return `
   <section class="print-header">
     <div>
-      <h1>BÁO CÁO TỔNG QUAN TIẾN ĐỘ SẢN PHẨM</h1>
-      <div class="mut">${esc(cycleLabel)}${filter.category ? ` · Nhóm: ${esc(filter.category)}` : ''} · Ngày lập: ${fmtDate(today, true)}</div>
+      <h1>PRODUCT PROGRESS OVERVIEW REPORT</h1>
+      <div class="mut">${esc(cycleLabel)}${filter.category ? ` · Category: ${esc(filter.category)}` : ''} · Generated: ${fmtDate(today, true)}</div>
     </div>
   </section>
 
@@ -260,57 +260,57 @@ export function renderReportView(
 
   <div class="section-head no-print">
     <div>
-      <h2>Tổng quan tiến độ</h2>
-      <p class="mut">Báo cáo dùng chung cho Ban Giám đốc, team R&amp;D và các phòng ban theo dõi.</p>
+      <h2>Progress Overview</h2>
+      <p class="mut">Shared executive report for Leadership, R&amp;D, and cross-functional teams.</p>
     </div>
     <div class="toolbar-group">
-      <div class="segmented" role="group" aria-label="Phạm vi chu kỳ">
-        <button type="button" class="${filter.cycleMode === 'current' ? 'active' : ''}" data-rep-cycle="current">Chu kỳ ${formatCycleLabel(currentCycle)}</button>
-        <button type="button" class="${filter.cycleMode === 'all' ? 'active' : ''}" data-rep-cycle="all">Tất cả chu kỳ</button>
+      <div class="segmented" role="group" aria-label="Cycle Scope">
+        <button type="button" class="${filter.cycleMode === 'current' ? 'active' : ''}" data-rep-cycle="current">Cycle ${formatCycleLabel(currentCycle)}</button>
+        <button type="button" class="${filter.cycleMode === 'all' ? 'active' : ''}" data-rep-cycle="all">All Cycles</button>
       </div>
-      <select id="repCatFilter" class="select-auto" aria-label="Lọc nhóm sản phẩm">
-        <option value="">Tất cả nhóm SP</option>
+      <select id="repCatFilter" class="select-auto" aria-label="Filter by product category">
+        <option value="">All Categories</option>
         ${categories
           .map((c) => `<option value="${esc(c)}" ${filter.category === c ? 'selected' : ''}>${esc(c)}</option>`)
           .join('')}
       </select>
-      <button type="button" id="repPrintBtn" class="btn">In báo cáo / PDF</button>
+      <button type="button" id="repPrintBtn" class="btn">Print / Export PDF</button>
     </div>
   </div>
 
   <div class="kpi-strip">
     <div class="kpi-cell">
-      <div class="kpi-label">Sản phẩm theo dõi</div>
+      <div class="kpi-label">Active Products</div>
       <div class="kpi-val">${products.length}</div>
-      <div class="mut">${approvedProducts} SP đã chốt mẫu RD</div>
+      <div class="mut">${approvedProducts} with approved RD sample</div>
     </div>
     <div class="kpi-cell">
-      <div class="kpi-label">Tiến độ hoàn thành</div>
+      <div class="kpi-label">Overall Progress</div>
       <div class="kpi-val">${overallPct}%</div>
-      <div class="mut tabular">${totalDone}/${totalTasks} công việc xong</div>
+      <div class="mut tabular">${totalDone}/${totalTasks} tasks done</div>
     </div>
     <div class="kpi-cell">
-      <div class="kpi-label">Đang thực hiện</div>
+      <div class="kpi-label">In Progress</div>
       <div class="kpi-val" style="color:var(--st-prog)">${totalProg}</div>
-      <div class="mut tabular">${totalNot} việc chưa bắt đầu</div>
+      <div class="mut tabular">${totalNot} not started</div>
     </div>
     <div class="kpi-cell">
-      <div class="kpi-label">Việc trễ hạn</div>
+      <div class="kpi-label">Overdue Tasks</div>
       <div class="kpi-val" style="color:${totalLate > 0 ? 'var(--st-late)' : 'inherit'}">${totalLate}</div>
-      <div class="mut tabular">${dueSoonCount} việc đến hạn trong 14 ngày</div>
+      <div class="mut tabular">${dueSoonCount} due within 14 days</div>
     </div>
     <div class="kpi-cell">
-      <div class="kpi-label">Mẫu R&amp;D đạt (Go)</div>
+      <div class="kpi-label">R&amp;D Passed (Go)</div>
       <div class="kpi-val" style="color:var(--st-done)">${goSamples}<span class="kpi-sub">/${totalSamples}</span></div>
-      <div class="mut">Tổng số mã RD đang theo dõi</div>
+      <div class="mut">Total tracked RD codes</div>
     </div>
   </div>
 
   <div class="panel">
     <div class="panel-head">
       <div>
-        <h3>Ma trận tiến độ sản phẩm theo 7 giai đoạn</h3>
-        <span class="mut">Bấm vào từng sản phẩm để xem timeline 13 tháng và mẫu R&amp;D chi tiết.</span>
+        <h3>Product Progress Matrix Across 7 Stages</h3>
+        <span class="mut">Click any product row to open its 13-month timeline and R&amp;D sample details.</span>
       </div>
     </div>
     ${
@@ -319,10 +319,10 @@ export function renderReportView(
             <table class="data-table">
               <thead>
                 <tr>
-                  <th>Sản phẩm / Nhóm</th>
-                  <th class="num">Ra mắt</th>
-                  <th>Mã RD · Giá CVS / Bán</th>
-                  <th class="num">Tổng thể</th>
+                  <th>Product / Category</th>
+                  <th class="num">Launch</th>
+                  <th>RD Code · CVS / Sell</th>
+                  <th class="num">Overall</th>
                   ${STAGE_SHORT.map((s) => `<th class="num">${esc(s)}</th>`).join('')}
                 </tr>
               </thead>
@@ -330,18 +330,18 @@ export function renderReportView(
             </table>
           </div>`
         : `<div class="empty-box">
-            <p>Chưa có sản phẩm nào trong ${esc(cycleLabel)}.</p>
+            <p>No products found in ${esc(cycleLabel)}.</p>
             ${
               editMode
                 ? `<div class="toolbar-group" style="justify-content:center;margin-top:12px">
-                    <button type="button" class="btn-pri" data-action="new-product">+ Sản phẩm mới</button>
+                    <button type="button" class="btn-pri" data-action="new-product">+ New Product</button>
                     ${
                       allProducts.length === 0
-                        ? `<button type="button" class="btn" data-action="load-demo">Tải dữ liệu mẫu (2026–2027)</button>`
+                        ? `<button type="button" class="btn" data-action="load-demo">Load Sample Data (2026–2027)</button>`
                         : ''
                     }
                   </div>`
-                : `<p class="mut">Chuyển sang "Chế độ Nhập liệu" (nếu bạn có quyền chỉnh sửa) để thêm sản phẩm đầu tiên.</p>`
+                : `<p class="mut">Switch to "Edit Mode" (if you have editor access) to add your first product.</p>`
             }
           </div>`
     }
@@ -350,17 +350,17 @@ export function renderReportView(
   <div class="panel">
     <div class="panel-head">
       <div>
-        <h3>Việc trễ hạn &amp; sắp đến hạn</h3>
-        <span class="mut">Tổng hợp từ tất cả sản phẩm để rà soát nhanh trong buổi họp.</span>
+        <h3>Overdue &amp; Upcoming Action Items</h3>
+        <span class="mut">Consolidated across all products for quick review in team standups.</span>
       </div>
       <div class="toolbar-group no-print">
-        <div class="segmented" role="group" aria-label="Bộ lọc công việc cảnh báo">
-          <button type="button" class="${filter.actionFilter === 'all_risk' ? 'active' : ''}" data-rep-act="all_risk">Trễ &amp; Sắp hạn</button>
-          <button type="button" class="${filter.actionFilter === 'late' ? 'active' : ''}" data-rep-act="late">Chỉ việc trễ</button>
-          <button type="button" class="${filter.actionFilter === 'milestone' ? 'active' : ''}" data-rep-act="milestone">Mốc chốt (◆)</button>
+        <div class="segmented" role="group" aria-label="Action item filter">
+          <button type="button" class="${filter.actionFilter === 'all_risk' ? 'active' : ''}" data-rep-act="all_risk">Overdue &amp; Due Soon</button>
+          <button type="button" class="${filter.actionFilter === 'late' ? 'active' : ''}" data-rep-act="late">Overdue Only</button>
+          <button type="button" class="${filter.actionFilter === 'milestone' ? 'active' : ''}" data-rep-act="milestone">Milestones (◆)</button>
         </div>
-        <select id="repPicFilter" class="select-auto" aria-label="Lọc theo PIC">
-          <option value="">Tất cả PIC</option>
+        <select id="repPicFilter" class="select-auto" aria-label="Filter by PIC">
+          <option value="">All PICs</option>
           ${pics.map((pic) => `<option value="${esc(pic)}" ${filter.pic === pic ? 'selected' : ''}>${esc(pic)}</option>`).join('')}
         </select>
       </div>
@@ -371,19 +371,19 @@ export function renderReportView(
             <table class="data-table">
               <thead>
                 <tr>
-                  <th>Sản phẩm</th>
-                  <th>Giai đoạn</th>
-                  <th>Công việc</th>
+                  <th>Product</th>
+                  <th>Stage</th>
+                  <th>Task</th>
                   <th>PIC</th>
-                  <th class="num">Hạn</th>
-                  <th>Tình trạng</th>
-                  ${editMode ? '<th class="no-print">Thao tác</th>' : ''}
+                  <th class="num">Due Date</th>
+                  <th>Status</th>
+                  ${editMode ? '<th class="no-print">Action</th>' : ''}
                 </tr>
               </thead>
               <tbody>${actionRows}</tbody>
             </table>
           </div>`
-        : `<div class="empty-box"><p>Không có công việc trễ hoặc sắp đến hạn theo bộ lọc hiện tại.</p></div>`
+        : `<div class="empty-box"><p>No overdue or upcoming tasks match the current filter.</p></div>`
     }
   </div>
   `;

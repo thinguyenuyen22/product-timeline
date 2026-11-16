@@ -49,7 +49,7 @@ export function renderTimelineView(
 
   const picList = Array.from(
     new Set((product.tasks || []).map((t) => t.pic.trim()).filter(Boolean))
-  ).sort((a, b) => a.localeCompare(b, 'vi'));
+  ).sort((a, b) => a.localeCompare(b, 'en'));
 
   const q = filter.search.trim().toLowerCase();
 
@@ -98,11 +98,11 @@ export function renderTimelineView(
           </button>
           <div class="toolbar-group">
             <span class="mut mono-sm">${stageDone}/${stageTasksAll.length}${
-      stageLate ? ` · <span class="status-txt status-late">${stageLate} trễ</span>` : ''
+      stageLate ? ` · <span class="status-txt status-late">${stageLate} overdue</span>` : ''
     }</span>
             ${
               editMode
-                ? `<button type="button" class="btn-inline-add" data-quick-stage="${stageIdx}" title="Thêm nhanh công việc vào giai đoạn này">+ Thêm</button>`
+                ? `<button type="button" class="btn-inline-add" data-quick-stage="${stageIdx}" title="Quick-add task to this stage">+ Add</button>`
                 : ''
             }
           </div>
@@ -148,36 +148,36 @@ export function renderTimelineView(
           ? `<div class="task-subline">
               <span class="inline-text-sm mut" data-inline-field="pic" data-task-id="${esc(
                 t.id
-              )}" title="Bấm để sửa PIC">${esc(t.pic) || '+ PIC'}</span>
+              )}" title="Click to edit PIC">${esc(t.pic) || '+ PIC'}</span>
               <span>·</span>
               <button type="button" class="inline-date-btn ${
                 eff === 'late' ? 'status-late' : ''
-              }" data-inline-due="${esc(t.id)}" title="Bấm để đổi hạn">${
-              t.end ? `Hạn ${fmtDate(t.end)}` : '+ Hạn'
+              }" data-inline-due="${esc(t.id)}" title="Click to change due date">${
+              t.end ? `Due ${fmtDate(t.end)}` : '+ Due'
             }</button>
               ${
                 t.start || t.end
                   ? `<button type="button" class="clear-dates-btn" data-clear-dates="${esc(
                       t.id
-                    )}" title="Xóa lịch tháng">×</button>`
+                    )}" title="Clear month schedule">×</button>`
                   : ''
               }
             </div>`
           : `<div class="task-subline mut">
-              <span>${esc(t.pic || 'Chưa gán PIC')}</span>
-              ${t.end ? `<span>·</span><span class="num ${eff === 'late' ? 'status-late' : ''}">Hạn ${fmtDate(t.end, true)}</span>` : ''}
+              <span>${esc(t.pic || 'Unassigned PIC')}</span>
+              ${t.end ? `<span>·</span><span class="num ${eff === 'late' ? 'status-late' : ''}">Due ${fmtDate(t.end, true)}</span>` : ''}
             </div>`;
 
         const statusControl = editMode
           ? `<div class="status-cell-wrap">
               <select class="inline-status st-${eff}" data-inline-status="${esc(
               t.id
-            )}" aria-label="Trạng thái công việc">
-                <option value="not" ${t.status === 'not' ? 'selected' : ''}>Chưa làm</option>
-                <option value="prog" ${t.status === 'prog' ? 'selected' : ''}>Đang làm</option>
-                <option value="done" ${t.status === 'done' ? 'selected' : ''}>Hoàn thành</option>
+            )}" aria-label="Task Status">
+                <option value="not" ${t.status === 'not' ? 'selected' : ''}>Not Started</option>
+                <option value="prog" ${t.status === 'prog' ? 'selected' : ''}>In Progress</option>
+                <option value="done" ${t.status === 'done' ? 'selected' : ''}>Done</option>
               </select>
-              ${eff === 'late' ? '<span class="late-tag">Trễ</span>' : ''}
+              ${eff === 'late' ? '<span class="late-tag">Overdue</span>' : ''}
             </div>`
           : `<span class="status-txt ${
               eff === 'done'
@@ -194,18 +194,18 @@ export function renderTimelineView(
             <div class="task-cell-wrap">
               ${
                 t.isMilestone
-                  ? '<span class="milestone-mark" title="Mốc chốt quan trọng">◆</span>'
+                  ? '<span class="milestone-mark" title="Key Milestone">◆</span>'
                   : ''
               }
-              ${t.priority === 'high' ? '<span class="prio-mark" title="Ưu tiên cao">!</span>' : ''}
+              ${t.priority === 'high' ? '<span class="prio-mark" title="High Priority">!</span>' : ''}
               ${
                 editMode
                   ? `<span class="inline-text" data-inline-field="name" data-task-id="${esc(
                       t.id
-                    )}" title="Bấm để sửa tên công việc">${esc(t.name)}</span>
+                    )}" title="Click to edit task name">${esc(t.name)}</span>
                      <button type="button" class="row-detail-btn" data-open-task="${esc(
                        t.id
-                     )}" title="Sửa chi tiết, ghi chú & xóa">⋯</button>`
+                     )}" title="Edit details, notes & delete">⋯</button>`
                   : `<span class="task-title-readonly" title="${esc(t.note || t.name)}">${esc(
                       t.name
                     )}</span>`
@@ -222,14 +222,14 @@ export function renderTimelineView(
         rowsHtml += `<tr class="quick-add-row" data-quick-row="${stageIdx}" hidden>
           <td class="col-task-slim sticky-1">
             <div style="display:flex;gap:6px">
-              <input type="text" class="quick-add-input" data-quick-input="${stageIdx}" placeholder="Tên công việc mới (Enter)...">
+              <input type="text" class="quick-add-input" data-quick-input="${stageIdx}" placeholder="New task name (Enter)...">
               <input type="text" class="quick-add-input" style="width:110px" data-quick-pic="${stageIdx}" placeholder="PIC...">
             </div>
           </td>
           <td class="col-status-slim sticky-2">
             <div class="toolbar-group">
-              <button type="button" class="btn-sm btn-pri" data-quick-save="${stageIdx}">Thêm</button>
-              <button type="button" class="btn-sm" data-quick-cancel="${stageIdx}">Hủy</button>
+              <button type="button" class="btn-sm btn-pri" data-quick-save="${stageIdx}">Add</button>
+              <button type="button" class="btn-sm" data-quick-cancel="${stageIdx}">Cancel</button>
             </div>
           </td>
           <td colspan="${months.length}"></td>
@@ -247,7 +247,7 @@ export function renderTimelineView(
 
   const pickHint =
     editMode && pendingMonthPick
-      ? `<div class="pick-banner">Đang chọn tháng bắt đầu — bấm hoặc kéo tới tháng kết thúc (bấm lại cùng tháng để chọn 1 tháng, nhấn Esc để hủy).</div>`
+      ? `<div class="pick-banner">Start month selected — click or drag to the end month (click the same month again for a 1-month span, or press Esc to cancel).</div>`
       : '';
 
   // Compact R&D Sample & Photos strip right inside Product View so Boss/R&D sees samples immediately
@@ -256,20 +256,20 @@ export function renderTimelineView(
     ? `<div class="panel" style="margin-top:18px">
         <div class="panel-head">
           <div>
-            <h3>Mẫu R&amp;D &amp; Hình ảnh đánh giá (${samples.length})</h3>
-            <span class="mut">Bấm vào ảnh thu nhỏ để phóng to, hoặc chuyển sang tab Mẫu R&amp;D để xem chi tiết lịch sử giá.</span>
+            <h3>R&amp;D Samples &amp; Evaluation Photos (${samples.length})</h3>
+            <span class="mut">Click any thumbnail to zoom, or open the R&amp;D Samples dashboard for full price history.</span>
           </div>
-          <button type="button" class="btn-sm" data-open-samples="${esc(product.id)}">Mở Dashboard Mẫu R&amp;D</button>
+          <button type="button" class="btn-sm" data-open-samples="${esc(product.id)}">Open Samples Dashboard</button>
         </div>
         <div class="table-wrap">
           <table class="data-table">
             <thead>
               <tr>
-                <th>Mã RD</th>
-                <th>Phiên bản / Đánh giá</th>
-                <th>Kết quả</th>
-                <th class="num">Giá CVS / Bán</th>
-                <th>Hình ảnh mẫu</th>
+                <th>RD Code</th>
+                <th>Version / Notes</th>
+                <th>Result</th>
+                <th class="num">CVS / Sell Price</th>
+                <th>Sample Photos</th>
               </tr>
             </thead>
             <tbody>
@@ -294,7 +294,7 @@ export function renderTimelineView(
                   return `<tr class="${s.isApproved ? 'row-approved' : ''}">
                     <td>
                       <div class="mono-code">${esc(s.rdCode)}</div>
-                      ${s.isApproved ? '<div class="status-txt status-done">Đã chốt SX</div>' : ''}
+                      ${s.isApproved ? '<div class="status-txt status-done">Approved for Prod</div>' : ''}
                     </td>
                     <td>
                       <div>${esc(s.version || '—')}</div>
@@ -304,13 +304,13 @@ export function renderTimelineView(
                     <td class="num mono-sm">${fmtMoney(s.cvsPrice)} / ${fmtMoney(s.sellPrice)}</td>
                     <td>
                       <div class="thumb-strip">
-                        ${thumbs || '<span class="mut">Chưa có ảnh</span>'}
+                        ${thumbs || '<span class="mut">No photos</span>'}
                         ${moreCount}
                         ${
                           editMode
                             ? `<button type="button" class="btn-sm" data-trigger-upload="${esc(
                                 product.id
-                              )}:${esc(s.id)}">+ Ảnh</button>`
+                              )}:${esc(s.id)}">+ Photos</button>`
                             : ''
                         }
                       </div>
@@ -328,32 +328,32 @@ export function renderTimelineView(
   <div class="section-head">
     <div class="breadcrumb-block">
       <div class="breadcrumb">
-        <button type="button" class="link-btn" data-nav-back="products">← Danh sách sản phẩm</button>
+        <button type="button" class="link-btn" data-nav-back="products">← All Products</button>
         <span aria-hidden="true">/</span>
-        <span>Chu kỳ ${formatCycleLabel(displayCycleYear)}</span>
+        <span>Cycle ${formatCycleLabel(displayCycleYear)}</span>
       </div>
       <h2 style="margin-top:4px">${esc(product.name)}</h2>
       <div class="mut">
-        ${esc(product.category || 'Chưa phân nhóm')}
-        ${product.launch ? ` · Ra mắt dự kiến ${fmtDate(product.launch, true)}` : ''}
-        · ${stats.pct}% hoàn thành (${stats.counts.done}/${stats.total} việc)
+        ${esc(product.category || 'Uncategorized')}
+        ${product.launch ? ` · Target Launch ${fmtDate(product.launch, true)}` : ''}
+        · ${stats.pct}% completed (${stats.counts.done}/${stats.total} tasks)
         ${
           primarySample
-            ? ` · Mẫu chốt: <strong>${esc(primarySample.rdCode)}</strong> (CVS ${fmtMoney(
+            ? ` · Primary Sample: <strong>${esc(primarySample.rdCode)}</strong> (CVS ${fmtMoney(
                 primarySample.cvsPrice
-              )} / Bán ${fmtMoney(primarySample.sellPrice)})`
+              )} / Sell ${fmtMoney(primarySample.sellPrice)})`
             : ''
         }
       </div>
     </div>
     <div class="toolbar-group">
-      <button type="button" class="btn" data-open-samples="${esc(product.id)}">Mẫu R&amp;D &amp; Giá (${
+      <button type="button" class="btn" data-open-samples="${esc(product.id)}">R&amp;D Samples &amp; Pricing (${
     samples.length
   })</button>
       ${
         editMode
-          ? `<button type="button" class="btn" data-action="edit-product">Sửa SP</button>
-             <button type="button" class="btn-pri" data-action="add-task">+ Thêm công việc</button>`
+          ? `<button type="button" class="btn" data-action="edit-product">Edit Product</button>
+             <button type="button" class="btn-pri" data-action="add-task">+ Add Task</button>`
           : ''
       }
     </div>
@@ -362,34 +362,34 @@ export function renderTimelineView(
   <div class="timeline-controls">
     <div class="legend-row">${legendItems}</div>
     <div class="toolbar-group">
-      <button type="button" class="btn-sm" data-collapse-done>Thu gọn GĐ xong</button>
-      <button type="button" class="btn-sm" data-expand-all>Mở tất cả</button>
-      <select id="tlStageFilter" class="select-auto" aria-label="Lọc theo giai đoạn">
-        <option value="all">Tất cả giai đoạn</option>
+      <button type="button" class="btn-sm" data-collapse-done>Collapse Done</button>
+      <button type="button" class="btn-sm" data-expand-all>Expand All</button>
+      <select id="tlStageFilter" class="select-auto" aria-label="Filter by stage">
+        <option value="all">All Stages</option>
         ${STAGES.map(
           (s, i) => `<option value="${i}" ${filter.stage === i ? 'selected' : ''}>${esc(s)}</option>`
         ).join('')}
       </select>
-      <select id="tlPicFilter" class="select-auto" aria-label="Lọc theo Team / PIC">
-        <option value="">Tất cả Team / PIC</option>
+      <select id="tlPicFilter" class="select-auto" aria-label="Filter by Team / PIC">
+        <option value="">All Teams / PIC</option>
         ${picList
           .map((p) => `<option value="${esc(p)}" ${filter.pic === p ? 'selected' : ''}>${esc(p)}</option>`)
           .join('')}
       </select>
-      <select id="tlStatusFilter" class="select-auto" aria-label="Lọc theo trạng thái">
-        <option value="all" ${filter.status === 'all' ? 'selected' : ''}>Mọi trạng thái</option>
-        <option value="late" ${filter.status === 'late' ? 'selected' : ''}>Trễ hạn</option>
-        <option value="prog" ${filter.status === 'prog' ? 'selected' : ''}>Đang làm</option>
-        <option value="not" ${filter.status === 'not' ? 'selected' : ''}>Chưa làm</option>
-        <option value="done" ${filter.status === 'done' ? 'selected' : ''}>Hoàn thành</option>
+      <select id="tlStatusFilter" class="select-auto" aria-label="Filter by status">
+        <option value="all" ${filter.status === 'all' ? 'selected' : ''}>All Statuses</option>
+        <option value="late" ${filter.status === 'late' ? 'selected' : ''}>Overdue</option>
+        <option value="prog" ${filter.status === 'prog' ? 'selected' : ''}>In Progress</option>
+        <option value="not" ${filter.status === 'not' ? 'selected' : ''}>Not Started</option>
+        <option value="done" ${filter.status === 'done' ? 'selected' : ''}>Done</option>
       </select>
       <label class="check-inline">
         <input type="checkbox" id="tlMilestoneFilter" ${filter.milestoneOnly ? 'checked' : ''}>
-        Mốc chốt (◆)
+        Milestones (◆)
       </label>
       <input type="search" id="tlSearchInput" class="input-search" value="${esc(
         filter.search
-      )}" placeholder="Tìm công việc...">
+      )}" placeholder="Search tasks...">
     </div>
   </div>
 
@@ -402,17 +402,17 @@ export function renderTimelineView(
             <thead>
               <tr>
                 <th class="col-task-slim sticky-1">${
-                  editMode ? 'Công việc · PIC · Hạn (bấm để sửa)' : 'Công việc · PIC · Hạn'
+                  editMode ? 'Task · PIC · Due (click to edit)' : 'Task · PIC · Due'
                 }</th>
-                <th class="col-status-slim sticky-2">Trạng thái</th>
+                <th class="col-status-slim sticky-2">Status</th>
                 ${months
                   .map((m) => {
                     const cls = ['mo-hdr'];
                     if (m.key === nowMonthKey) cls.push('now');
                     if (m.key === launchMonthKey) cls.push('launch-mo');
                     return `<th class="${cls.join(' ')}" title="${esc(m.label)}${
-                      m.key === nowMonthKey ? ' (Tháng hiện tại)' : ''
-                    }${m.key === launchMonthKey ? ' (Tháng ra mắt dự kiến)' : ''}">${esc(
+                      m.key === nowMonthKey ? ' (Current Month)' : ''
+                    }${m.key === launchMonthKey ? ' (Target Launch Month)' : ''}">${esc(
                       m.label
                     )}</th>`;
                   })
@@ -422,12 +422,12 @@ export function renderTimelineView(
             <tbody>${rowsHtml}</tbody>
           </table>
         </div>`
-      : `<div class="empty-box"><p>Không có công việc nào khớp bộ lọc.</p></div>`
+      : `<div class="empty-box"><p>No tasks match the current filter.</p></div>`
   }
 
   ${
     editMode
-      ? `<p class="mut" style="margin-top:10px">Chế độ Nhập liệu: Bấm vào tên việc, PIC, hạn hoặc trạng thái để sửa trực tiếp. Trên lưới 13 tháng, bấm 2 ô tháng (hoặc kéo ngang) để gán khoảng thời gian.</p>`
+      ? `<p class="mut" style="margin-top:10px">Edit Mode: Click any task name, PIC, due date, or status to edit inline. On the 13-month grid, click two month cells (or drag horizontally) to set the task schedule.</p>`
       : ''
   }
 

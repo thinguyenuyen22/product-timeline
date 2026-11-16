@@ -59,41 +59,41 @@ export function renderProductsView(
         <div class="prod-card-top">
           <div>
             <h3 class="prod-card-title">${esc(p.name)}</h3>
-            <div class="mut">${esc(p.category || 'Chưa phân nhóm')}${
-        p.launch ? ` · Ra mắt ${fmtDate(p.launch, true)}` : ''
+            <div class="mut">${esc(p.category || 'Uncategorized')}${
+        p.launch ? ` · Est. Launch ${fmtDate(p.launch, true)}` : ''
       }</div>
           </div>
           <span class="mono-pct">${s.pct}%</span>
         </div>
 
-        <div class="seg-bar" aria-label="Tiến độ ${s.pct}%">${barSegments}</div>
+        <div class="seg-bar" aria-label="Progress ${s.pct}%">${barSegments}</div>
 
         <div class="mut tabular">
-          ${s.counts.done}/${s.total} việc xong${
-        s.counts.late ? ` · <span class="status-txt status-late">${s.counts.late} trễ</span>` : ''
+          ${s.counts.done}/${s.total} tasks done${
+        s.counts.late ? ` · <span class="status-txt status-late">${s.counts.late} overdue</span>` : ''
       }
         </div>
 
         <div class="prod-card-meta">
           ${
             primarySample
-              ? `<div class="mono-sm">Mẫu: <strong>${esc(primarySample.rdCode)}</strong> · CVS ${fmtMoney(
+              ? `<div class="mono-sm">Sample: <strong>${esc(primarySample.rdCode)}</strong> · CVS ${fmtMoney(
                   primarySample.cvsPrice
-                )} · Bán ${fmtMoney(primarySample.sellPrice)}</div>`
-              : `<div class="mut">Chưa có mã mẫu R&amp;D</div>`
+                )} · Sell ${fmtMoney(primarySample.sellPrice)}</div>`
+              : `<div class="mut">No R&amp;D sample yet</div>`
           }
           ${
             nextTask
-              ? `<div class="mut">Tiếp theo: ${esc(nextTask.name)} (${fmtDate(nextTask.end)})</div>`
+              ? `<div class="mut">Next: ${esc(nextTask.name)} (${fmtDate(nextTask.end)})</div>`
               : ''
           }
         </div>
 
         <div class="prod-card-actions">
-          <button type="button" class="btn-sm" data-open-product="${esc(p.id)}">Xem Timeline</button>
-          <button type="button" class="btn-sm" data-open-samples="${esc(p.id)}">Mẫu R&amp;D (${
+          <button type="button" class="btn-sm" data-open-product="${esc(p.id)}">View Timeline</button>
+          <button type="button" class="btn-sm" data-open-samples="${esc(p.id)}">R&amp;D Samples (${
         (p.samples || []).length
-      }${totalImgs ? ` · ${totalImgs} ảnh` : ''})</button>
+      }${totalImgs ? ` · ${totalImgs} photos` : ''})</button>
         </div>
       </article>`;
     })
@@ -102,22 +102,22 @@ export function renderProductsView(
   return `
   <div class="section-head">
     <div>
-      <h2>Sản phẩm chu kỳ ${formatCycleLabel(currentCycle)}</h2>
-      <p class="mut">Theo dõi các sản phẩm triển khai từ tháng 03/${currentCycle} đến hết tháng 03/${currentCycle + 1}.</p>
+      <h2>Products — Cycle ${formatCycleLabel(currentCycle)}</h2>
+      <p class="mut">Track product development from 03/${currentCycle} through 03/${currentCycle + 1}.</p>
     </div>
     <div class="toolbar-group">
       <input type="search" id="prodSearchInput" class="input-search" value="${esc(
         searchQuery
-      )}" placeholder="Tìm tên SP, nhóm, mã RD..." aria-label="Tìm kiếm sản phẩm">
+      )}" placeholder="Search product, category, RD code..." aria-label="Search products">
     </div>
   </div>
 
   <div class="kpi-strip">
-    <div class="kpi-cell"><div class="kpi-label">Sản phẩm</div><div class="kpi-val">${cycleProducts.length}</div></div>
-    <div class="kpi-cell"><div class="kpi-label">Hoàn thành</div><div class="kpi-val" style="color:var(--st-done)">${totDone}</div></div>
-    <div class="kpi-cell"><div class="kpi-label">Đang làm</div><div class="kpi-val" style="color:var(--st-prog)">${totProg}</div></div>
-    <div class="kpi-cell"><div class="kpi-label">Chưa làm</div><div class="kpi-val">${totNot}</div></div>
-    <div class="kpi-cell"><div class="kpi-label">Trễ hạn</div><div class="kpi-val" style="color:${totLate ? 'var(--st-late)' : 'inherit'}">${totLate}</div></div>
+    <div class="kpi-cell"><div class="kpi-label">Products</div><div class="kpi-val">${cycleProducts.length}</div></div>
+    <div class="kpi-cell"><div class="kpi-label">Done</div><div class="kpi-val" style="color:var(--st-done)">${totDone}</div></div>
+    <div class="kpi-cell"><div class="kpi-label">In Progress</div><div class="kpi-val" style="color:var(--st-prog)">${totProg}</div></div>
+    <div class="kpi-cell"><div class="kpi-label">Not Started</div><div class="kpi-val">${totNot}</div></div>
+    <div class="kpi-cell"><div class="kpi-label">Overdue</div><div class="kpi-val" style="color:${totLate ? 'var(--st-late)' : 'inherit'}">${totLate}</div></div>
   </div>
 
   ${
@@ -126,16 +126,16 @@ export function renderProductsView(
       : `<div class="empty-box">
           <p>${
             q
-              ? 'Không tìm thấy sản phẩm nào khớp từ khóa tìm kiếm.'
-              : `Chưa có sản phẩm nào cho chu kỳ ${formatCycleLabel(currentCycle)}.`
+              ? 'No products match your search query.'
+              : `No products found for cycle ${formatCycleLabel(currentCycle)}.`
           }</p>
           ${
             editMode
               ? `<div class="toolbar-group" style="justify-content:center;margin-top:12px">
-                  <button type="button" class="btn-pri" data-action="new-product">+ Sản phẩm mới</button>
+                  <button type="button" class="btn-pri" data-action="new-product">+ New Product</button>
                   ${
                     allProducts.length === 0
-                      ? `<button type="button" class="btn" data-action="load-demo">Tải dữ liệu mẫu (2026–2027)</button>`
+                      ? `<button type="button" class="btn" data-action="load-demo">Load Sample Data (2026–2027)</button>`
                       : ''
                   }
                 </div>`

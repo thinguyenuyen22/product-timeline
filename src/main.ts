@@ -123,13 +123,13 @@ function canEdit(): boolean {
 
 function applyTheme(): void {
   document.documentElement.setAttribute('data-theme', theme);
-  $('themeToggleBtn').textContent = theme === 'dark' ? 'Chế độ sáng' : 'Chế độ tối';
+  $('themeToggleBtn').textContent = theme === 'dark' ? 'Light Mode' : 'Dark Mode';
 }
 
 function askConfirm(
   title: string,
   message: string,
-  okLabel = 'Xác nhận',
+  okLabel = 'Confirm',
   isDanger = false
 ): Promise<boolean> {
   return new Promise((resolve) => {
@@ -177,8 +177,8 @@ function syncHeaderControls(): void {
     currentUser.role === 'admin'
       ? 'Admin'
       : currentUser.role === 'editor'
-      ? 'Nhập liệu'
-      : 'Chỉ Xem';
+      ? 'Editor'
+      : 'Viewer';
   $('userLabel').textContent = `${currentUser.displayName || currentUser.email} (${roleLabel})`;
 
   const editable = canEdit();
@@ -216,7 +216,7 @@ function render(preserveScroll = false): void {
   const mainEl = $('main');
 
   if (!authReady || isLoadingData) {
-    mainEl.innerHTML = `<div class="auth-gate"><div class="auth-card"><h3>Đang tải dữ liệu...</h3><p class="mut">Đang đồng bộ tiến độ dự án và mẫu R&amp;D từ Cloud SQL.</p></div></div>`;
+    mainEl.innerHTML = `<div class="auth-gate"><div class="auth-card"><h3>Loading data...</h3><p class="mut">Syncing product timelines and R&amp;D samples from Cloud SQL.</p></div></div>`;
     return;
   }
 
@@ -225,14 +225,14 @@ function render(preserveScroll = false): void {
       <div class="auth-gate">
         <div class="auth-card">
           <h1>Product Timeline Tracker</h1>
-          <p class="mut">Theo dõi tiến độ phát triển sản phẩm theo chu kỳ 03/2026 – 03/2027, đánh giá mẫu R&amp;D kèm hình ảnh và báo cáo tổng quan dùng chung toàn đội ngũ.</p>
+          <p class="mut">Track product development across 03/2026 – 03/2027 cycles, manage R&amp;D sample evaluations with photos, and share unified executive progress reports.</p>
           ${
             loadErrorMsg
               ? `<div class="pick-banner" style="border-color:var(--st-late)">${esc(loadErrorMsg)}</div>`
               : ''
           }
-          <button type="button" class="btn-pri" id="googleSignInBtn" style="width:100%">Đăng nhập bằng Google</button>
-          <p class="mut" style="margin:0">Dữ liệu được lưu trữ dài hạn trên Cloud SQL PostgreSQL. Ban Giám đốc, team R&amp;D và các phòng ban đăng nhập để xem cùng một nguồn dữ liệu.</p>
+          <button type="button" class="btn-pri" id="googleSignInBtn" style="width:100%">Sign in with Google</button>
+          <p class="mut" style="margin:0">Data is persisted in Cloud SQL PostgreSQL. Leadership, R&amp;D, and cross-functional teams sign in to view the same live source of truth.</p>
         </div>
       </div>
     `;
@@ -243,7 +243,7 @@ function render(preserveScroll = false): void {
           loadErrorMsg = '';
           await signInWithPopup(auth, googleAuthProvider);
         } catch (err: any) {
-          loadErrorMsg = err?.message || 'Đăng nhập Google thất bại. Vui lòng thử lại.';
+          loadErrorMsg = err?.message || 'Google sign-in failed. Please try again.';
           render();
         }
       };
@@ -254,7 +254,7 @@ function render(preserveScroll = false): void {
   if (loadErrorMsg) {
     mainEl.innerHTML = `<div class="panel"><div class="empty-box">
       <p class="status-txt status-late">${esc(loadErrorMsg)}</p>
-      <button type="button" class="btn" id="retryLoadBtn" style="margin-top:12px">Thử tải lại</button>
+      <button type="button" class="btn" id="retryLoadBtn" style="margin-top:12px">Retry</button>
     </div></div>`;
     const retry = document.getElementById('retryLoadBtn');
     if (retry) retry.onclick = () => refreshFromServer();
@@ -317,7 +317,7 @@ async function refreshFromServer(silent = false): Promise<void> {
     currentUser = data.user;
     if (!canEdit()) editMode = false;
   } catch (err: any) {
-    loadErrorMsg = err?.message || 'Không thể kết nối Cloud SQL.';
+    loadErrorMsg = err?.message || 'Unable to connect to Cloud SQL.';
   } finally {
     isLoadingData = false;
     render(silent);
@@ -446,7 +446,7 @@ async function updateTaskOnActiveProduct(
   } catch (err: any) {
     Object.assign(task, prevSnapshot);
     render(true);
-    showToast(err?.message || 'Lỗi lưu lên Cloud SQL');
+    showToast(err?.message || 'Failed to save to Cloud SQL');
   }
 }
 
@@ -485,8 +485,8 @@ async function commitMonthSpan(taskId: string, mA: number, mB: number): Promise<
       t.end = endMonth.endDate;
     },
     minM === maxM
-      ? `Đã gán tháng ${startMonth.label}`
-      : `Đã gán lịch ${startMonth.label} – ${endMonth.label}`
+      ? `Scheduled for ${startMonth.label}`
+      : `Scheduled ${startMonth.label} – ${endMonth.label}`
   );
 }
 
@@ -583,11 +583,11 @@ mainEl.addEventListener('click', async (e) => {
       render(true);
       try {
         await apiSaveTask(prod.id, task);
-        showToast(`Đã đánh dấu hoàn thành: ${task.name}`);
+        showToast(`Marked done: ${task.name}`);
       } catch (err: any) {
         task.status = 'prog';
         render(true);
-        showToast(err?.message || 'Lỗi lưu lên Cloud SQL');
+        showToast(err?.message || 'Failed to save to Cloud SQL');
       }
     }
     return;
@@ -649,9 +649,9 @@ mainEl.addEventListener('click', async (e) => {
         products = demo;
         currentCycle = 2026;
         render();
-        showToast('Đã lưu dữ liệu mẫu lên Cloud SQL');
+        showToast('Sample data saved to Cloud SQL');
       } catch (err: any) {
-        showToast(err?.message || 'Lỗi tải dữ liệu mẫu');
+        showToast(err?.message || 'Failed to load sample data');
       }
     } else if (act === 'sync-legacy') {
       if (!editMode) return;
@@ -660,9 +660,9 @@ mainEl.addEventListener('click', async (e) => {
       try {
         await apiImportProducts(legacy);
         await refreshFromServer();
-        showToast(`Đã đồng bộ ${legacy.length} sản phẩm lên Cloud SQL`);
+        showToast(`Synced ${legacy.length} products to Cloud SQL`);
       } catch (err: any) {
-        showToast(err?.message || 'Lỗi đồng bộ dữ liệu cũ');
+        showToast(err?.message || 'Failed to sync legacy data');
       }
     }
     return;
@@ -689,7 +689,7 @@ mainEl.addEventListener('click', async (e) => {
         t.start = '';
         t.end = '';
       },
-      'Đã xóa lịch'
+      'Schedule cleared'
     );
     return;
   }
@@ -823,10 +823,10 @@ mainEl.addEventListener('click', async (e) => {
       render(true);
       try {
         await apiApproveSample(prodId, sampleId, next);
-        showToast(next ? `Đã chốt mẫu ${samp.rdCode} cho sản phẩm` : `Đã bỏ chốt mẫu ${samp.rdCode}`);
+        showToast(next ? `Approved ${samp.rdCode} for production` : `Removed approval for ${samp.rdCode}`);
       } catch (err: any) {
         await refreshFromServer(true);
-        showToast(err?.message || 'Lỗi cập nhật trạng thái chốt mẫu');
+        showToast(err?.message || 'Failed to update sample approval status');
       }
     }
     return;
@@ -890,12 +890,12 @@ mainEl.addEventListener('change', async (e) => {
       render(true);
       try {
         await apiSaveSample(prod.id, samp);
-        showToast(`Đã cập nhật kết quả test ${samp.rdCode}`);
+        showToast(`Updated test result for ${samp.rdCode}`);
       } catch (err: any) {
         samp.testResult = prevRes;
         samp.testDate = prevDate;
         render(true);
-        showToast(err?.message || 'Lỗi lưu kết quả test');
+        showToast(err?.message || 'Failed to save test result');
       }
     }
   }
@@ -947,11 +947,11 @@ async function commitQuickAddTask(stageIdx: number): Promise<void> {
   render(true);
   try {
     await apiSaveTask(prod.id, newTask);
-    showToast(`Đã thêm "${name}"`);
+    showToast(`Added "${name}"`);
   } catch (err: any) {
     prod.tasks = prod.tasks.filter((t) => t.id !== newTask.id);
     render(true);
-    showToast(err?.message || 'Lỗi lưu công việc mới');
+    showToast(err?.message || 'Failed to save new task');
   }
 }
 
@@ -1040,7 +1040,7 @@ $<HTMLInputElement>('sampleImageUploadInput').onchange = async (e) => {
   const samp = prod?.samples.find((s) => s.id === sampleId);
   if (!prod || !samp) return;
 
-  showToast(`Đang tối ưu và tải ${files.length} ảnh lên Cloud SQL...`);
+  showToast(`Optimizing and uploading ${files.length} photo(s) to Cloud SQL...`);
   try {
     const newImgs: SampleImage[] = [];
     for (const f of files) {
@@ -1056,9 +1056,9 @@ $<HTMLInputElement>('sampleImageUploadInput').onchange = async (e) => {
     await apiUploadSampleImages(sampleId, newImgs);
     samp.images = [...(samp.images || []), ...newImgs];
     render(true);
-    showToast(`Đã tải lên ${newImgs.length} ảnh cho mẫu ${samp.rdCode}`);
+    showToast(`Uploaded ${newImgs.length} photo(s) for ${samp.rdCode}`);
   } catch (err: any) {
-    showToast(err?.message || 'Lỗi tải ảnh lên');
+    showToast(err?.message || 'Failed to upload photos');
   }
 };
 
@@ -1092,8 +1092,8 @@ function renderLightboxContent(): void {
 
   const img = samp.images[lightboxState.index];
   $('lbTitle').textContent = `${samp.rdCode} — ${prod.name}`;
-  $('lbSubtitle').textContent = `Ảnh ${lightboxState.index + 1}/${samp.images.length}${
-    img.uploadedBy ? ` · Tải bởi ${img.uploadedBy}` : ''
+  $('lbSubtitle').textContent = `Photo ${lightboxState.index + 1}/${samp.images.length}${
+    img.uploadedBy ? ` · Uploaded by ${img.uploadedBy}` : ''
   }`;
 
   const lbImg = $<HTMLImageElement>('lbImg');
@@ -1113,7 +1113,7 @@ function renderLightboxContent(): void {
     delImgBtn.hidden = false;
   } else {
     capText.hidden = false;
-    capText.textContent = img.caption || 'Không có chú thích';
+    capText.textContent = img.caption || 'No caption';
     capInput.hidden = true;
     saveCapBtn.hidden = true;
     delImgBtn.hidden = true;
@@ -1163,9 +1163,9 @@ $('lbSaveCapBtn').onclick = async () => {
     await apiUpdateImageCaption(img.id, caption);
     img.caption = caption;
     renderLightboxContent();
-    showToast('Đã lưu chú thích ảnh');
+    showToast('Photo caption saved');
   } catch (err: any) {
-    showToast(err?.message || 'Lỗi lưu chú thích');
+    showToast(err?.message || 'Failed to save caption');
   }
 };
 $('lbDeleteImgBtn').onclick = async () => {
@@ -1174,16 +1174,16 @@ $('lbDeleteImgBtn').onclick = async () => {
   const samp = prod?.samples.find((s) => s.id === lightboxState!.sampleId);
   const img = samp?.images[lightboxState.index];
   if (!samp || !img) return;
-  const ok = await askConfirm('Xóa hình ảnh', 'Xóa hình ảnh này khỏi mẫu R&D?', 'Xóa ảnh', true);
+  const ok = await askConfirm('Delete Photo', 'Remove this photo from the R&D sample?', 'Delete Photo', true);
   if (!ok) return;
   try {
     await apiDeleteSampleImage(img.id);
     samp.images = samp.images.filter((i) => i.id !== img.id);
     render(true);
     renderLightboxContent();
-    showToast('Đã xóa ảnh');
+    showToast('Photo deleted');
   } catch (err: any) {
-    showToast(err?.message || 'Lỗi xóa ảnh');
+    showToast(err?.message || 'Failed to delete photo');
   }
 };
 
@@ -1206,7 +1206,7 @@ document.querySelectorAll<HTMLButtonElement>('[data-mode]').forEach((btn) => {
     pendingMonthPick = null;
     twoClickAnchor = null;
     render();
-    showToast(editMode ? 'Đã bật Chế độ Nhập liệu' : 'Đã chuyển sang Chế độ Xem');
+    showToast(editMode ? 'Switched to Edit Mode' : 'Switched to View Mode');
   };
 });
 
@@ -1227,7 +1227,7 @@ $('cycleSelect').onchange = () => {
 
 $('refreshBtn').onclick = async () => {
   await refreshFromServer(true);
-  showToast('Đã cập nhật dữ liệu mới nhất');
+  showToast('Data refreshed from Cloud SQL');
 };
 
 $('signOutBtn').onclick = async () => {
@@ -1250,7 +1250,7 @@ $('exportBtn').onclick = () => {
   a.download = `product-tracker-${getTodayStr()}.json`;
   a.click();
   window.setTimeout(() => URL.revokeObjectURL(url), 1000);
-  showToast('Đã xuất file JSON sao lưu');
+  showToast('JSON backup exported');
 };
 
 $('importBtn').onclick = () => $('importFileInput').click();
@@ -1265,20 +1265,20 @@ $<HTMLInputElement>('importFileInput').onchange = async (e) => {
       throw new Error('Invalid');
     }
     const ok = await askConfirm(
-      'Nhập dữ liệu JSON lên Cloud SQL',
-      `Nhập ${parsed.length} sản phẩm từ file? Các sản phẩm trùng ID sẽ được cập nhật trên Cloud SQL.`,
-      'Nhập lên Cloud'
+      'Import JSON to Cloud SQL',
+      `Import ${parsed.length} product(s) from file? Existing products with matching IDs will be updated in Cloud SQL.`,
+      'Import to Cloud'
     );
     if (!ok) return;
     const normalizedList = parsed.map(normalizeProduct);
     await apiImportProducts(normalizedList);
     await refreshFromServer(true);
-    showToast(`Đã nhập ${normalizedList.length} sản phẩm lên Cloud SQL`);
+    showToast(`Imported ${normalizedList.length} product(s) to Cloud SQL`);
   } catch (err: any) {
     await askConfirm(
-      'Lỗi nhập file',
-      err?.message || 'File JSON không đúng định dạng Product Timeline Tracker.',
-      'Đóng'
+      'Import Error',
+      err?.message || 'JSON file does not match Product Timeline Tracker format.',
+      'Close'
     );
   }
 };
@@ -1289,7 +1289,7 @@ $('memCloseBtn').onclick = () => $<HTMLDialogElement>('membersDialog').close();
 
 async function openMembersModal(): Promise<void> {
   const dlg = $<HTMLDialogElement>('membersDialog');
-  $('memListWrap').innerHTML = `<div class="empty-box"><p>Đang tải danh sách thành viên...</p></div>`;
+  $('memListWrap').innerHTML = `<div class="empty-box"><p>Loading members...</p></div>`;
   dlg.showModal();
   await reloadMembersTable();
 }
@@ -1301,7 +1301,7 @@ async function reloadMembersTable(): Promise<void> {
     for (const inv of invites) {
       merged.set(inv.email, {
         email: inv.email,
-        displayName: 'Chưa đăng nhập',
+        displayName: 'Pending sign-in',
         role: inv.role,
         signedIn: false,
       });
@@ -1325,18 +1325,18 @@ async function reloadMembersTable(): Promise<void> {
             m.role === 'admin'
               ? '<span class="status-txt status-done">Admin</span>'
               : m.role === 'editor'
-              ? '<span class="status-txt status-prog">Nhập liệu (Editor)</span>'
-              : '<span class="mut">Chỉ Xem (Viewer)</span>'
+              ? '<span class="status-txt status-prog">Editor</span>'
+              : '<span class="mut">Viewer</span>'
           }</td>
           <td>${
             m.email === currentUser?.email
-              ? '<span class="mut">Bạn</span>'
+              ? '<span class="mut">You</span>'
               : `<div class="row-actions">
-                  <button type="button" class="btn-sm" data-mem-role="${esc(m.email)}:editor">Cho Nhập liệu</button>
-                  <button type="button" class="btn-sm" data-mem-role="${esc(m.email)}:viewer">Chỉ Xem</button>
+                  <button type="button" class="btn-sm" data-mem-role="${esc(m.email)}:editor">Set Editor</button>
+                  <button type="button" class="btn-sm" data-mem-role="${esc(m.email)}:viewer">Set Viewer</button>
                   ${
                     !m.signedIn
-                      ? `<button type="button" class="btn-sm btn-danger" data-mem-del="${esc(m.email)}">Xóa</button>`
+                      ? `<button type="button" class="btn-sm btn-danger" data-mem-del="${esc(m.email)}">Remove</button>`
                       : ''
                   }
                 </div>`
@@ -1346,12 +1346,12 @@ async function reloadMembersTable(): Promise<void> {
       .join('');
 
     $('memListWrap').innerHTML = `<table class="data-table">
-      <thead><tr><th>Email</th><th>Tên</th><th>Quyền hiện tại</th><th>Điều chỉnh</th></tr></thead>
+      <thead><tr><th>Email</th><th>Name</th><th>Current Role</th><th>Actions</th></tr></thead>
       <tbody>${rows}</tbody>
     </table>`;
   } catch (err: any) {
     $('memListWrap').innerHTML = `<div class="empty-box"><p class="status-txt status-late">${esc(
-      err?.message || 'Không tải được danh sách.'
+      err?.message || 'Failed to load members.'
     )}</p></div>`;
   }
 }
@@ -1367,9 +1367,9 @@ $('memAddBtn').onclick = async () => {
     await apiSetMemberRole(email, role);
     $<HTMLInputElement>('memEmailInput').value = '';
     await reloadMembersTable();
-    showToast(`Đã cấp quyền ${role} cho ${email}`);
+    showToast(`Granted ${role} role to ${email}`);
   } catch (err: any) {
-    showToast(err?.message || 'Lỗi cấp quyền');
+    showToast(err?.message || 'Failed to grant role');
   }
 };
 
@@ -1380,7 +1380,7 @@ $('memListWrap').onclick = async (e) => {
     const [email, role] = (roleBtn.dataset.memRole || '').split(':');
     await apiSetMemberRole(email, role as UserRole);
     await reloadMembersTable();
-    showToast(`Đã cập nhật quyền cho ${email}`);
+    showToast(`Updated role for ${email}`);
     return;
   }
   const delBtn = target.closest<HTMLElement>('[data-mem-del]');
@@ -1388,7 +1388,7 @@ $('memListWrap').onclick = async (e) => {
     const email = delBtn.dataset.memDel || '';
     await apiRemoveInvite(email);
     await reloadMembersTable();
-    showToast(`Đã xóa lời mời ${email}`);
+    showToast(`Removed invite for ${email}`);
   }
 };
 
@@ -1397,7 +1397,7 @@ function openProductModal(prod: Product | null): void {
   if (!editMode) return;
   editingProductId = prod?.id || null;
   const dlg = $<HTMLDialogElement>('productDialog');
-  $('prodDlgTitle').textContent = prod ? 'Sửa thông tin sản phẩm' : 'Sản phẩm mới';
+  $('prodDlgTitle').textContent = prod ? 'Edit Product' : 'New Product';
   $<HTMLInputElement>('pName').value = prod?.name || '';
   $<HTMLInputElement>('pCategory').value = prod?.category || '';
   $<HTMLInputElement>('pLaunch').value = prod?.launch || '';
@@ -1482,9 +1482,9 @@ $('pSaveBtn').onclick = async () => {
     currentCycle = cycleStartYear;
     $<HTMLDialogElement>('productDialog').close();
     render();
-    showToast(editingProductId ? 'Đã cập nhật sản phẩm' : `Đã tạo sản phẩm "${name}"`);
+    showToast(editingProductId ? 'Product updated' : `Created product "${name}"`);
   } catch (err: any) {
-    showToast(err?.message || 'Lỗi lưu sản phẩm');
+    showToast(err?.message || 'Failed to save product');
   }
 };
 
@@ -1492,9 +1492,9 @@ $('pDeleteBtn').onclick = async () => {
   if (!editingProductId) return;
   const prod = products.find((p) => p.id === editingProductId);
   const ok = await askConfirm(
-    'Xóa sản phẩm',
-    `Xóa "${prod?.name || ''}" cùng toàn bộ công việc và mẫu R&D liên quan trên Cloud SQL?`,
-    'Xóa vĩnh viễn',
+    'Delete Product',
+    `Delete "${prod?.name || ''}" along with all associated tasks and R&D samples from Cloud SQL?`,
+    'Delete Permanently',
     true
   );
   if (!ok) return;
@@ -1504,9 +1504,9 @@ $('pDeleteBtn').onclick = async () => {
     if (activeProductId === editingProductId) activeProductId = null;
     $<HTMLDialogElement>('productDialog').close();
     render();
-    showToast('Đã xóa sản phẩm');
+    showToast('Product deleted');
   } catch (err: any) {
-    showToast(err?.message || 'Lỗi xóa sản phẩm');
+    showToast(err?.message || 'Failed to delete product');
   }
 };
 
@@ -1516,7 +1516,7 @@ function openTaskModal(task: Task | null): void {
   editingTaskId = task?.id || null;
   const dlg = $<HTMLDialogElement>('taskDialog');
   $('tStage').innerHTML = STAGES.map((s, i) => `<option value="${i}">${esc(s)}</option>`).join('');
-  $('taskDlgTitle').textContent = task ? 'Chi tiết công việc' : 'Thêm công việc mới';
+  $('taskDlgTitle').textContent = task ? 'Task Details' : 'Add New Task';
 
   $<HTMLSelectElement>('tStage').value = String(
     task ? task.stage : timelineFilter.stage === 'all' ? 0 : timelineFilter.stage
@@ -1569,9 +1569,9 @@ $('tSaveBtn').onclick = async () => {
     else prod.tasks[idx] = payload;
     $<HTMLDialogElement>('taskDialog').close();
     render(true);
-    showToast('Đã lưu công việc');
+    showToast('Task saved');
   } catch (err: any) {
-    showToast(err?.message || 'Lỗi lưu công việc');
+    showToast(err?.message || 'Failed to save task');
   }
 };
 
@@ -1583,9 +1583,9 @@ $('tDeleteBtn').onclick = async () => {
     prod.tasks = prod.tasks.filter((t) => t.id !== editingTaskId);
     $<HTMLDialogElement>('taskDialog').close();
     render(true);
-    showToast('Đã xóa công việc');
+    showToast('Task deleted');
   } catch (err: any) {
-    showToast(err?.message || 'Lỗi xóa công việc');
+    showToast(err?.message || 'Failed to delete task');
   }
 };
 
@@ -1608,7 +1608,7 @@ function openSampleModal(ref: { productId: string; sampleId: string } | null): v
     : products.find((p) => p.id === (samplesFilter.productId || activeProductId)) || products[0];
   const samp = ref ? prod?.samples.find((s) => s.id === ref.sampleId) || null : null;
 
-  $('sampleDlgTitle').textContent = samp ? `Sửa mẫu ${samp.rdCode}` : 'Thêm mã mẫu R&D mới';
+  $('sampleDlgTitle').textContent = samp ? `Edit Sample ${samp.rdCode}` : 'Add R&D Sample';
   prodSel.value = prod?.id || products[0].id;
   prodSel.disabled = Boolean(samp);
 
@@ -1696,7 +1696,7 @@ $('sSaveBtn').onclick = async () => {
                 cvsPrice,
                 packagingCost,
                 sellPrice,
-                reason: 'Khởi tạo giá ban đầu',
+                reason: 'Initial sample price',
                 updatedBy: currentUser?.email || '',
               },
             ]
@@ -1726,9 +1726,9 @@ $('sSaveBtn').onclick = async () => {
 
     $<HTMLDialogElement>('sampleDialog').close();
     render(true);
-    showToast(editingSampleRef ? `Đã cập nhật mẫu ${rdCode}` : `Đã thêm mẫu ${rdCode}`);
+    showToast(editingSampleRef ? `Updated sample ${rdCode}` : `Added sample ${rdCode}`);
   } catch (err: any) {
-    showToast(err?.message || 'Lỗi lưu mẫu R&D');
+    showToast(err?.message || 'Failed to save R&D sample');
   }
 };
 
@@ -1738,9 +1738,9 @@ $('sDeleteBtn').onclick = async () => {
   const samp = prod?.samples.find((s) => s.id === editingSampleRef?.sampleId);
   if (!prod || !samp) return;
   const ok = await askConfirm(
-    'Xóa mã mẫu R&D',
-    `Xóa mã mẫu "${samp.rdCode}", toàn bộ hình ảnh và lịch sử giá của mẫu này?`,
-    'Xóa mẫu',
+    'Delete R&D Sample',
+    `Delete sample "${samp.rdCode}", all of its photos, and its price history?`,
+    'Delete Sample',
     true
   );
   if (!ok) return;
@@ -1749,9 +1749,9 @@ $('sDeleteBtn').onclick = async () => {
     prod.samples = prod.samples.filter((s) => s.id !== samp.id);
     $<HTMLDialogElement>('sampleDialog').close();
     render(true);
-    showToast(`Đã xóa mẫu ${samp.rdCode}`);
+    showToast(`Deleted sample ${samp.rdCode}`);
   } catch (err: any) {
-    showToast(err?.message || 'Lỗi xóa mẫu');
+    showToast(err?.message || 'Failed to delete sample');
   }
 };
 
@@ -1773,9 +1773,9 @@ function openPriceModal(productId: string, sampleId: string): void {
   if (!prod || !samp) return;
   pricingSampleRef = { productId, sampleId };
 
-  $('priceTargetInfo').textContent = `${samp.rdCode} · ${prod.name} (Hiện tại: CVS ${fmtMoney(
+  $('priceTargetInfo').textContent = `${samp.rdCode} · ${prod.name} (Current: CVS ${fmtMoney(
     samp.cvsPrice
-  )} · Bán ${fmtMoney(samp.sellPrice)})`;
+  )} · Sell ${fmtMoney(samp.sellPrice)})`;
 
   $<HTMLInputElement>('prCvs').value = String(samp.cvsPrice || 0);
   $<HTMLInputElement>('prPack').value = String(samp.packagingCost || 0);
@@ -1801,7 +1801,7 @@ $('prSaveBtn').onclick = async () => {
     cvsPrice: Number($<HTMLInputElement>('prCvs').value) || 0,
     packagingCost: Number($<HTMLInputElement>('prPack').value) || 0,
     sellPrice: Number($<HTMLInputElement>('prSell').value) || 0,
-    reason: $<HTMLInputElement>('prReason').value.trim() || 'Cập nhật giá định kỳ',
+    reason: $<HTMLInputElement>('prReason').value.trim() || 'Scheduled price update',
     updatedBy: currentUser?.email || '',
   };
 
@@ -1815,9 +1815,9 @@ $('prSaveBtn').onclick = async () => {
 
     $<HTMLDialogElement>('priceDialog').close();
     render(true);
-    showToast(`Đã cập nhật giá mới cho ${samp.rdCode}`);
+    showToast(`Updated pricing for ${samp.rdCode}`);
   } catch (err: any) {
-    showToast(err?.message || 'Lỗi lưu lịch sử giá');
+    showToast(err?.message || 'Failed to save price history');
   }
 };
 
@@ -1833,7 +1833,7 @@ function openHistoryModal(productId: string, sampleId: string): void {
 
   const logs = (samp.priceHistory || []).slice();
   if (!logs.length) {
-    $('histContent').innerHTML = `<div class="empty-box"><p>Chưa có bản ghi cập nhật giá nào cho mẫu này.</p></div>`;
+    $('histContent').innerHTML = `<div class="empty-box"><p>No price update records found for this sample.</p></div>`;
   } else {
     const rows = logs
       .map((log, i) => {
@@ -1843,7 +1843,7 @@ function openHistoryModal(productId: string, sampleId: string): void {
           prev && deltaCvs !== 0
             ? `<span class="${deltaCvs > 0 ? 'status-txt status-late' : 'status-txt status-done'}">${
                 deltaCvs > 0 ? '+' : ''
-              }${new Intl.NumberFormat('vi-VN').format(deltaCvs)} đ</span>`
+              }${new Intl.NumberFormat('en-US').format(deltaCvs)} VND</span>`
             : `<span class="mut">—</span>`;
         const margin = calcMarginPct(log.cvsPrice, log.sellPrice);
 
@@ -1863,13 +1863,13 @@ function openHistoryModal(productId: string, sampleId: string): void {
     $('histContent').innerHTML = `<table class="data-table">
       <thead>
         <tr>
-          <th class="num">Ngày</th>
-          <th class="num">Giá CVS</th>
-          <th class="num">Chênh lệch</th>
-          <th class="num">Bao bì / NL</th>
-          <th class="num">Giá bán DK</th>
-          <th class="num">Biên LN</th>
-          <th>Lý do cập nhật</th>
+          <th class="num">Date</th>
+          <th class="num">CVS Cost</th>
+          <th class="num">Delta</th>
+          <th class="num">Pack / Ingred.</th>
+          <th class="num">Est. Sell Price</th>
+          <th class="num">Margin</th>
+          <th>Update Reason</th>
         </tr>
       </thead>
       <tbody>${rows}</tbody>

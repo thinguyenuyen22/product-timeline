@@ -3,7 +3,7 @@ import type { PriceLog, Product, RDSample, SampleImage, Task, UserRole } from '.
 
 async function authHeaders(): Promise<Record<string, string>> {
   const user = auth.currentUser;
-  if (!user) throw new Error('Bạn chưa đăng nhập.');
+  if (!user) throw new Error('You are not signed in.');
   const token = await user.getIdToken();
   return {
     'Content-Type': 'application/json',
@@ -22,7 +22,7 @@ async function apiFetch<T>(url: string, options: RequestInit = {}): Promise<T> {
   });
   const data = await res.json().catch(() => ({}));
   if (!res.ok) {
-    throw new Error(data.error || `Lỗi máy chủ (${res.status})`);
+    throw new Error(data.error || `Server error (${res.status})`);
   }
   return data as T;
 }

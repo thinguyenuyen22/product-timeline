@@ -45,7 +45,7 @@ app.get('/api/workspace', requireAuth, async (req: AuthRequest, res) => {
     res.json({ products: items, user: req.dbUser });
   } catch (error: any) {
     console.error('GET /api/workspace error:', error);
-    res.status(500).json({ error: error?.message || 'Không thể tải dữ liệu workspace.' });
+    res.status(500).json({ error: error?.message || 'Failed to load workspace data.' });
   }
 });
 
@@ -54,7 +54,7 @@ app.post('/api/products', requireAuth, requireEditor, async (req: AuthRequest, r
   try {
     const { id, name, category, launch, cycleStartYear, tasks } = req.body || {};
     if (!id || !name) {
-      return res.status(400).json({ error: 'Thiếu mã hoặc tên sản phẩm.' });
+      return res.status(400).json({ error: 'Product ID and name are required.' });
     }
     await createOrUpdateProduct(
       {
@@ -70,7 +70,7 @@ app.post('/api/products', requireAuth, requireEditor, async (req: AuthRequest, r
     res.json({ ok: true });
   } catch (error: any) {
     console.error('POST /api/products error:', error);
-    res.status(500).json({ error: error?.message || 'Lỗi lưu sản phẩm.' });
+    res.status(500).json({ error: error?.message || 'Failed to save product.' });
   }
 });
 
@@ -80,7 +80,7 @@ app.delete('/api/products/:id', requireAuth, requireEditor, async (req: AuthRequ
     res.json({ ok: true });
   } catch (error: any) {
     console.error('DELETE /api/products error:', error);
-    res.status(500).json({ error: error?.message || 'Lỗi xóa sản phẩm.' });
+    res.status(500).json({ error: error?.message || 'Failed to delete product.' });
   }
 });
 
@@ -95,7 +95,7 @@ app.put(
       const taskId = String(req.params.taskId);
       const body = req.body || {};
       if (!body.name) {
-        return res.status(400).json({ error: 'Tên công việc không được để trống.' });
+        return res.status(400).json({ error: 'Task name cannot be empty.' });
       }
       await upsertTask(productId, {
         id: taskId,
@@ -113,7 +113,7 @@ app.put(
       res.json({ ok: true });
     } catch (error: any) {
       console.error('PUT task error:', error);
-      res.status(500).json({ error: error?.message || 'Lỗi cập nhật công việc.' });
+      res.status(500).json({ error: error?.message || 'Failed to update task.' });
     }
   }
 );
@@ -124,7 +124,7 @@ app.delete('/api/tasks/:taskId', requireAuth, requireEditor, async (req: AuthReq
     res.json({ ok: true });
   } catch (error: any) {
     console.error('DELETE task error:', error);
-    res.status(500).json({ error: error?.message || 'Lỗi xóa công việc.' });
+    res.status(500).json({ error: error?.message || 'Failed to delete task.' });
   }
 });
 
@@ -139,7 +139,7 @@ app.put(
       const sampleId = String(req.params.sampleId);
       const body = req.body || {};
       if (!body.rdCode) {
-        return res.status(400).json({ error: 'Thiếu mã RD.' });
+        return res.status(400).json({ error: 'RD code is required.' });
       }
       await upsertSample(
         productId,
@@ -164,7 +164,7 @@ app.put(
       res.json({ ok: true });
     } catch (error: any) {
       console.error('PUT sample error:', error);
-      res.status(500).json({ error: error?.message || 'Lỗi lưu mẫu R&D.' });
+      res.status(500).json({ error: error?.message || 'Failed to save R&D sample.' });
     }
   }
 );
@@ -183,7 +183,7 @@ app.post(
       res.json({ ok: true });
     } catch (error: any) {
       console.error('POST approve sample error:', error);
-      res.status(500).json({ error: error?.message || 'Lỗi cập nhật trạng thái chốt mẫu.' });
+      res.status(500).json({ error: error?.message || 'Failed to update sample approval status.' });
     }
   }
 );
@@ -194,7 +194,7 @@ app.delete('/api/samples/:sampleId', requireAuth, requireEditor, async (req: Aut
     res.json({ ok: true });
   } catch (error: any) {
     console.error('DELETE sample error:', error);
-    res.status(500).json({ error: error?.message || 'Lỗi xóa mẫu R&D.' });
+    res.status(500).json({ error: error?.message || 'Failed to delete R&D sample.' });
   }
 });
 
@@ -208,7 +208,7 @@ app.post(
       const sampleId = String(req.params.sampleId);
       const { id, date, cvsPrice, packagingCost, sellPrice, reason } = req.body || {};
       if (!id || !date) {
-        return res.status(400).json({ error: 'Thiếu thông tin ngày cập nhật giá.' });
+        return res.status(400).json({ error: 'Effective date is required for price updates.' });
       }
       await recordSamplePriceUpdate(
         sampleId,
@@ -225,7 +225,7 @@ app.post(
       res.json({ ok: true });
     } catch (error: any) {
       console.error('POST price log error:', error);
-      res.status(500).json({ error: error?.message || 'Lỗi lưu lịch sử giá.' });
+      res.status(500).json({ error: error?.message || 'Failed to save price history.' });
     }
   }
 );
@@ -240,13 +240,13 @@ app.post(
       const sampleId = String(req.params.sampleId);
       const images = Array.isArray(req.body?.images) ? req.body.images : [];
       if (!images.length) {
-        return res.status(400).json({ error: 'Không có ảnh nào được gửi lên.' });
+        return res.status(400).json({ error: 'No images were uploaded.' });
       }
       await addSampleImages(sampleId, images, req.dbUser?.email || '');
       res.json({ ok: true });
     } catch (error: any) {
       console.error('POST sample images error:', error);
-      res.status(500).json({ error: error?.message || 'Lỗi tải ảnh lên.' });
+      res.status(500).json({ error: error?.message || 'Failed to upload photos.' });
     }
   }
 );
@@ -257,7 +257,7 @@ app.patch('/api/images/:imageId', requireAuth, requireEditor, async (req: AuthRe
     res.json({ ok: true });
   } catch (error: any) {
     console.error('PATCH image caption error:', error);
-    res.status(500).json({ error: error?.message || 'Lỗi cập nhật chú thích ảnh.' });
+    res.status(500).json({ error: error?.message || 'Failed to update photo caption.' });
   }
 });
 
@@ -267,7 +267,7 @@ app.delete('/api/images/:imageId', requireAuth, requireEditor, async (req: AuthR
     res.json({ ok: true });
   } catch (error: any) {
     console.error('DELETE sample image error:', error);
-    res.status(500).json({ error: error?.message || 'Lỗi xóa hình ảnh.' });
+    res.status(500).json({ error: error?.message || 'Failed to delete photo.' });
   }
 });
 
@@ -276,13 +276,13 @@ app.post('/api/workspace/import', requireAuth, requireEditor, async (req: AuthRe
   try {
     const items = Array.isArray(req.body?.products) ? req.body.products : [];
     if (!items.length) {
-      return res.status(400).json({ error: 'Không có dữ liệu sản phẩm để nhập.' });
+      return res.status(400).json({ error: 'No product data provided to import.' });
     }
     await importWorkspaceProducts(items, req.user?.uid || '');
     res.json({ ok: true, count: items.length });
   } catch (error: any) {
     console.error('POST import error:', error);
-    res.status(500).json({ error: error?.message || 'Lỗi nhập dữ liệu lên Cloud SQL.' });
+    res.status(500).json({ error: error?.message || 'Failed to import data into Cloud SQL.' });
   }
 });
 
@@ -293,7 +293,7 @@ app.get('/api/members', requireAuth, requireAdmin, async (_req: AuthRequest, res
     res.json(result);
   } catch (error: any) {
     console.error('GET /api/members error:', error);
-    res.status(500).json({ error: error?.message || 'Lỗi tải danh sách thành viên.' });
+    res.status(500).json({ error: error?.message || 'Failed to load workspace members.' });
   }
 });
 
@@ -302,16 +302,16 @@ app.post('/api/members', requireAuth, requireAdmin, async (req: AuthRequest, res
     const email = String(req.body?.email || '').trim().toLowerCase();
     const role = String(req.body?.role || 'editor') as UserRole;
     if (!email || !email.includes('@')) {
-      return res.status(400).json({ error: 'Email không hợp lệ.' });
+      return res.status(400).json({ error: 'Invalid email address.' });
     }
     if (role !== 'admin' && role !== 'editor' && role !== 'viewer') {
-      return res.status(400).json({ error: 'Vai trò không hợp lệ.' });
+      return res.status(400).json({ error: 'Invalid role.' });
     }
     await setMemberAccess(email, role, req.dbUser?.email || '');
     res.json({ ok: true });
   } catch (error: any) {
     console.error('POST /api/members error:', error);
-    res.status(500).json({ error: error?.message || 'Lỗi cấp quyền thành viên.' });
+    res.status(500).json({ error: error?.message || 'Failed to update member permissions.' });
   }
 });
 
@@ -321,7 +321,7 @@ app.delete('/api/members/:email', requireAuth, requireAdmin, async (req: AuthReq
     res.json({ ok: true });
   } catch (error: any) {
     console.error('DELETE /api/members error:', error);
-    res.status(500).json({ error: error?.message || 'Lỗi xóa phân quyền.' });
+    res.status(500).json({ error: error?.message || 'Failed to remove invite.' });
   }
 });
 

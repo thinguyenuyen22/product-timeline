@@ -19,7 +19,7 @@ export interface AuthRequest extends Request {
 export const requireAuth = async (req: AuthRequest, res: Response, next: NextFunction) => {
   const authHeader = req.headers.authorization;
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    return res.status(401).json({ error: 'Chưa đăng nhập hoặc thiếu token xác thực.' });
+    return res.status(401).json({ error: 'Not signed in or missing authentication token.' });
   }
 
   const token = authHeader.split('Bearer ')[1];
@@ -41,7 +41,7 @@ export const requireAuth = async (req: AuthRequest, res: Response, next: NextFun
     next();
   } catch (error) {
     console.error('Error verifying Firebase ID token:', error);
-    return res.status(401).json({ error: 'Phiên đăng nhập không hợp lệ hoặc đã hết hạn.' });
+    return res.status(401).json({ error: 'Invalid or expired sign-in session.' });
   }
 };
 
@@ -49,7 +49,7 @@ export const requireEditor = (req: AuthRequest, res: Response, next: NextFunctio
   const role = req.dbUser?.role;
   if (role !== 'admin' && role !== 'editor') {
     return res.status(403).json({
-      error: 'Tài khoản của bạn đang ở quyền Xem (Viewer). Liên hệ quản trị viên để cấp quyền Nhập liệu.',
+      error: 'Your account has Viewer access only. Contact an administrator to request Editor access.',
     });
   }
   next();
@@ -57,7 +57,7 @@ export const requireEditor = (req: AuthRequest, res: Response, next: NextFunctio
 
 export const requireAdmin = (req: AuthRequest, res: Response, next: NextFunction) => {
   if (req.dbUser?.role !== 'admin') {
-    return res.status(403).json({ error: 'Chỉ quản trị viên mới có quyền thực hiện thao tác này.' });
+    return res.status(403).json({ error: 'Administrator privileges are required for this action.' });
   }
   next();
 };

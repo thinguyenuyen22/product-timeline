@@ -23,7 +23,7 @@ export function normalizeProduct(raw: any): Product {
     ? raw.tasks.map((t: any) => ({
         id: String(t.id || uid()),
         stage: Number.isFinite(Number(t.stage)) ? Math.min(6, Math.max(0, Number(t.stage))) : 0,
-        name: String(t.name || '').trim() || 'Công việc chưa đặt tên',
+        name: String(t.name || '').trim() || 'Untitled Task',
         pic: String(t.pic || ''),
         status: t.status === 'done' || t.status === 'prog' ? t.status : 'not',
         start: typeof t.start === 'string' ? t.start : '',
@@ -75,7 +75,7 @@ export function normalizeProduct(raw: any): Product {
 
   return {
     id: String(raw.id || uid()),
-    name: String(raw.name || 'Sản phẩm chưa đặt tên'),
+    name: String(raw.name || 'Untitled Product'),
     category: String(raw.category || ''),
     launch,
     cycleStartYear,

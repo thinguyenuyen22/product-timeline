@@ -160,7 +160,7 @@ export async function getAllWorkspaceData(): Promise<ProductDto[]> {
     }));
   } catch (error) {
     console.error('Database query failed in getAllWorkspaceData:', error);
-    throw new Error('Không thể tải dữ liệu dự án từ cơ sở dữ liệu.', { cause: error });
+    throw new Error('Failed to load workspace data from database.', { cause: error });
   }
 }
 
@@ -224,7 +224,7 @@ export async function createOrUpdateProduct(
     });
   } catch (error) {
     console.error('Database error in createOrUpdateProduct:', error);
-    throw new Error('Không thể lưu sản phẩm.', { cause: error });
+    throw new Error('Failed to save product.', { cause: error });
   }
 }
 
@@ -233,7 +233,7 @@ export async function removeProduct(productId: string): Promise<void> {
     await db.delete(products).where(eq(products.id, productId));
   } catch (error) {
     console.error('Database error in removeProduct:', error);
-    throw new Error('Không thể xóa sản phẩm.', { cause: error });
+    throw new Error('Failed to delete product.', { cause: error });
   }
 }
 
@@ -271,7 +271,7 @@ export async function upsertTask(productId: string, task: TaskDto): Promise<void
       });
   } catch (error) {
     console.error('Database error in upsertTask:', error);
-    throw new Error('Không thể lưu công việc.', { cause: error });
+    throw new Error('Failed to save task.', { cause: error });
   }
 }
 
@@ -280,7 +280,7 @@ export async function removeTask(taskId: string): Promise<void> {
     await db.delete(tasks).where(eq(tasks.id, taskId));
   } catch (error) {
     console.error('Database error in removeTask:', error);
-    throw new Error('Không thể xóa công việc.', { cause: error });
+    throw new Error('Failed to delete task.', { cause: error });
   }
 }
 
@@ -353,7 +353,7 @@ export async function upsertSample(
     });
   } catch (error) {
     console.error('Database error in upsertSample:', error);
-    throw new Error('Không thể lưu mẫu R&D.', { cause: error });
+    throw new Error('Failed to save R&D sample.', { cause: error });
   }
 }
 
@@ -388,7 +388,7 @@ export async function toggleApproveSample(
     });
   } catch (error) {
     console.error('Database error in toggleApproveSample:', error);
-    throw new Error('Không thể cập nhật trạng thái chốt mẫu.', { cause: error });
+    throw new Error('Failed to update sample approval status.', { cause: error });
   }
 }
 
@@ -397,7 +397,7 @@ export async function removeSample(sampleId: string): Promise<void> {
     await db.delete(rdSamples).where(eq(rdSamples.id, sampleId));
   } catch (error) {
     console.error('Database error in removeSample:', error);
-    throw new Error('Không thể xóa mẫu R&D.', { cause: error });
+    throw new Error('Failed to delete R&D sample.', { cause: error });
   }
 }
 
@@ -431,7 +431,7 @@ export async function recordSamplePriceUpdate(
     });
   } catch (error) {
     console.error('Database error in recordSamplePriceUpdate:', error);
-    throw new Error('Không thể cập nhật lịch sử giá mẫu.', { cause: error });
+    throw new Error('Failed to update sample price history.', { cause: error });
   }
 }
 
@@ -454,7 +454,7 @@ export async function addSampleImages(
     );
   } catch (error) {
     console.error('Database error in addSampleImages:', error);
-    throw new Error('Không thể lưu hình ảnh mẫu R&D.', { cause: error });
+    throw new Error('Failed to save R&D sample photos.', { cause: error });
   }
 }
 
@@ -463,7 +463,7 @@ export async function updateSampleImageCaption(imageId: string, caption: string)
     await db.update(sampleImages).set({ caption }).where(eq(sampleImages.id, imageId));
   } catch (error) {
     console.error('Database error in updateSampleImageCaption:', error);
-    throw new Error('Không thể cập nhật chú thích ảnh.', { cause: error });
+    throw new Error('Failed to update photo caption.', { cause: error });
   }
 }
 
@@ -472,7 +472,7 @@ export async function removeSampleImage(imageId: string): Promise<void> {
     await db.delete(sampleImages).where(eq(sampleImages.id, imageId));
   } catch (error) {
     console.error('Database error in removeSampleImage:', error);
-    throw new Error('Không thể xóa hình ảnh mẫu.', { cause: error });
+    throw new Error('Failed to delete sample photo.', { cause: error });
   }
 }
 
@@ -605,7 +605,7 @@ export async function importWorkspaceProducts(items: ProductDto[], uid: string):
     });
   } catch (error) {
     console.error('Database error in importWorkspaceProducts:', error);
-    throw new Error('Không thể nhập dữ liệu vào Cloud SQL.', { cause: error });
+    throw new Error('Failed to import data into Cloud SQL.', { cause: error });
   }
 }
 
@@ -618,7 +618,7 @@ export async function listWorkspaceMembers() {
     return { users: signedUsers, invites };
   } catch (error) {
     console.error('Database error in listWorkspaceMembers:', error);
-    throw new Error('Không thể tải danh sách thành viên.', { cause: error });
+    throw new Error('Failed to load workspace members.', { cause: error });
   }
 }
 
@@ -639,7 +639,7 @@ export async function setMemberAccess(
     await db.update(users).set({ role }).where(eq(users.email, cleanEmail));
   } catch (error) {
     console.error('Database error in setMemberAccess:', error);
-    throw new Error('Không thể cập nhật quyền thành viên.', { cause: error });
+    throw new Error('Failed to update member permissions.', { cause: error });
   }
 }
 
@@ -649,6 +649,6 @@ export async function removeInvite(email: string): Promise<void> {
     await db.delete(workspaceInvites).where(eq(workspaceInvites.email, cleanEmail));
   } catch (error) {
     console.error('Database error in removeInvite:', error);
-    throw new Error('Không thể xóa lời mời.', { cause: error });
+    throw new Error('Failed to remove invite.', { cause: error });
   }
 }

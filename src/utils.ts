@@ -8,18 +8,20 @@ import type {
 } from './types';
 
 export const STATUS_META: Record<EffectiveStatus, { label: string; color: string }> = {
-  done: { label: 'Hoàn thành', color: 'var(--st-done)' },
-  prog: { label: 'Đang làm', color: 'var(--st-prog)' },
-  not: { label: 'Chưa làm', color: 'var(--st-not)' },
-  late: { label: 'Trễ', color: 'var(--st-late)' },
+  done: { label: 'Done', color: 'var(--st-done)' },
+  prog: { label: 'In Progress', color: 'var(--st-prog)' },
+  not: { label: 'Not Started', color: 'var(--st-not)' },
+  late: { label: 'Overdue', color: 'var(--st-late)' },
 };
 
 export const SAMPLE_RESULT_META: Record<SampleTestResult, { label: string; color: string }> = {
-  pending: { label: 'Chờ test', color: 'var(--st-not)' },
-  go: { label: 'Đạt (Go)', color: 'var(--st-done)' },
-  revise: { label: 'Chỉnh sửa', color: 'var(--st-prog)' },
-  nogo: { label: 'Không đạt', color: 'var(--st-late)' },
+  pending: { label: 'Pending', color: 'var(--st-not)' },
+  go: { label: 'Pass (Go)', color: 'var(--st-done)' },
+  revise: { label: 'Revise', color: 'var(--st-prog)' },
+  nogo: { label: 'Fail (No-Go)', color: 'var(--st-late)' },
 };
+
+const MONTH_ABBR = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
 export function uid(): string {
   return Math.random().toString(36).slice(2, 9) + Date.now().toString(36).slice(-4);
@@ -60,7 +62,7 @@ export function fmtDate(iso?: string, withYear = false): string {
 
 export function fmtMoney(val?: number): string {
   if (val === undefined || val === null || Number.isNaN(val) || val === 0) return '—';
-  return new Intl.NumberFormat('vi-VN').format(Math.round(val)) + ' đ';
+  return new Intl.NumberFormat('en-US').format(Math.round(val)) + ' VND';
 }
 
 export function calcMarginPct(cvs: number, sell: number): number | null {
@@ -109,7 +111,7 @@ export function buildCycleMonths(cycleStartYear: number): CycleMonth[] {
     months.push({
       index: i + 1,
       key,
-      label: `T${m1}/${String(yr).slice(2)}`,
+      label: `${MONTH_ABBR[m0]} ${String(yr).slice(2)}`,
       startDate: `${key}-01`,
       endDate: `${key}-${String(lastDay).padStart(2, '0')}`,
     });
@@ -197,10 +199,6 @@ export function getPrimarySample(product: Product): RDSample | null {
   );
 }
 
-/**
- * Compresses an uploaded image File client-side to WebP/JPEG (max 1200px longest side)
- * so multi-image uploads are fast and stored cleanly in Cloud SQL.
- */
 export function compressImageFile(
   file: File,
   maxDimension = 1200,
@@ -208,10 +206,10 @@ export function compressImageFile(
 ): Promise<{ dataUrl: string; mimeType: string }> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
-    reader.onerror = () => reject(new Error('Không đọc được file ảnh.'));
+    reader.onerror = () => reject(new Error('Could not read image file.'));
     reader.onload = () => {
       const img = new Image();
-      img.onerror = () => reject(new Error('File không phải hình ảnh hợp lệ.'));
+      img.onerror = () => reject(new Error('Invalid image file.'));
       img.onload = () => {
         let w = img.width;
         let h = img.height;
@@ -229,7 +227,7 @@ export function compressImageFile(
         canvas.height = h;
         const ctx = canvas.getContext('2d');
         if (!ctx) {
-          reject(new Error('Trình duyệt không hỗ trợ xử lý ảnh.'));
+          reject(new Error('Browser does not support image processing.'));
           return;
         }
         ctx.drawImage(img, 0, 0, w, h);

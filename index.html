@@ -1,12 +1,12 @@
 <!doctype html>
-<html lang="vi">
+<html lang="en">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Product Timeline Tracker</title>
-  <meta name="description" content="Theo dõi tiến độ phát triển sản phẩm theo chu kỳ 03/2026–03/2027, quản lý mẫu R&D kèm hình ảnh đánh giá, lưu trữ dài hạn trên Cloud SQL.">
+  <meta name="description" content="Track product development timelines across 03/2026–03/2027 cycles, manage R&D sample evaluations with photos, and share executive progress reports.">
   <meta property="og:title" content="Product Timeline Tracker">
-  <meta property="og:description" content="Quản lý timeline phát triển sản phẩm 13 tháng, đánh giá mẫu R&D với hình ảnh và báo cáo tổng quan dùng chung.">
+  <meta property="og:description" content="Manage 13-month product development timelines, R&D sample evaluations with photos, pricing history, and unified progress reports.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@500;600;700&family=Public+Sans:wght@400;500;600&display=swap" rel="stylesheet">
@@ -16,15 +16,15 @@
   <header class="topbar" id="topbar" hidden>
     <div class="topbar-inner">
       <a href="#report" class="brand-wordmark" id="brandLink">Product Timeline</a>
-      <nav class="main-nav" aria-label="Điều hướng chính">
-        <button type="button" class="nav-link active" data-tab="report">Tổng quan</button>
-        <button type="button" class="nav-link" data-tab="products">Sản phẩm</button>
-        <button type="button" class="nav-link" data-tab="samples">Mẫu R&amp;D &amp; Giá</button>
+      <nav class="main-nav" aria-label="Primary Navigation">
+        <button type="button" class="nav-link active" data-tab="report">Overview</button>
+        <button type="button" class="nav-link" data-tab="products">Products</button>
+        <button type="button" class="nav-link" data-tab="samples">R&amp;D Samples &amp; Pricing</button>
       </nav>
       <div class="topbar-cta">
         <span class="user-inline" id="userLabel"></span>
-        <button type="button" class="btn-sm" id="signOutBtn">Đăng xuất</button>
-        <button type="button" class="btn-pri" id="newProductBtn" hidden>+ Sản phẩm mới</button>
+        <button type="button" class="btn-sm" id="signOutBtn">Sign Out</button>
+        <button type="button" class="btn-pri" id="newProductBtn" hidden>+ New Product</button>
       </div>
     </div>
   </header>
@@ -32,22 +32,22 @@
   <div class="workspace-bar" id="workspaceBar" hidden>
     <div class="workspace-bar-inner">
       <div class="cycle-picker">
-        <label for="cycleSelect" class="cycle-label">Chu kỳ:</label>
+        <label for="cycleSelect" class="cycle-label">Cycle:</label>
         <select id="cycleSelect" class="select-auto"></select>
 
-        <div class="segmented" id="modeSwitchWrap" hidden role="group" aria-label="Chế độ giao diện">
-          <button type="button" class="active" data-mode="view">Chế độ Xem</button>
-          <button type="button" data-mode="edit">Chế độ Nhập liệu</button>
+        <div class="segmented" id="modeSwitchWrap" hidden role="group" aria-label="Workspace Mode">
+          <button type="button" class="active" data-mode="view">View Mode</button>
+          <button type="button" data-mode="edit">Edit Mode</button>
         </div>
-        <span class="mut" id="viewerBadge" hidden>Quyền: Chỉ Xem</span>
+        <span class="mut" id="viewerBadge" hidden>Access: View Only</span>
       </div>
 
       <div class="toolbar-group">
-        <button type="button" class="btn-sm" id="refreshBtn" title="Tải dữ liệu mới nhất từ Cloud SQL">Làm mới</button>
-        <button type="button" class="btn-sm" id="membersBtn" hidden>Thành viên</button>
-        <button type="button" class="btn-sm" id="themeToggleBtn">Chế độ tối</button>
-        <button type="button" class="btn-sm" id="exportBtn" title="Tải file sao lưu JSON">Xuất JSON</button>
-        <button type="button" class="btn-sm" id="importBtn" hidden title="Nhập từ file sao lưu JSON">Nhập JSON</button>
+        <button type="button" class="btn-sm" id="refreshBtn" title="Fetch latest data from Cloud SQL">Refresh</button>
+        <button type="button" class="btn-sm" id="membersBtn" hidden>Members</button>
+        <button type="button" class="btn-sm" id="themeToggleBtn">Dark Mode</button>
+        <button type="button" class="btn-sm" id="exportBtn" title="Download JSON backup">Export JSON</button>
+        <button type="button" class="btn-sm" id="importBtn" hidden title="Import from JSON backup">Import JSON</button>
         <input type="file" id="importFileInput" accept=".json,application/json" hidden>
         <input type="file" id="sampleImageUploadInput" accept="image/*" multiple hidden>
       </div>
@@ -56,71 +56,71 @@
 
   <main id="main" class="wrap"></main>
 
-  <!-- Modal Sản phẩm -->
+  <!-- Product Modal -->
   <dialog id="productDialog">
-    <h3 id="prodDlgTitle">Sản phẩm mới</h3>
-    <label for="pName">Tên sản phẩm</label>
-    <input type="text" id="pName" placeholder="VD: Syrup Smoked Tea">
+    <h3 id="prodDlgTitle">New Product</h3>
+    <label for="pName">Product Name</label>
+    <input type="text" id="pName" placeholder="e.g., Syrup Smoked Tea">
 
     <div class="form-grid-2">
       <div>
-        <label for="pCategory">Nhóm / dòng sản phẩm</label>
-        <input type="text" id="pCategory" placeholder="VD: Andros Pro">
+        <label for="pCategory">Category / Product Line</label>
+        <input type="text" id="pCategory" placeholder="e.g., Andros Pro">
       </div>
       <div>
-        <label for="pLaunch">Ngày ra mắt dự kiến</label>
+        <label for="pLaunch">Target Launch Date</label>
         <input type="date" id="pLaunch">
       </div>
     </div>
 
-    <label for="pCycle">Chu kỳ thực hiện (Tháng 03 – Tháng 03)</label>
+    <label for="pCycle">Execution Cycle (March – March)</label>
     <select id="pCycle"></select>
 
     <label id="pTemplateWrap" class="check-inline" style="margin-top:14px">
       <input type="checkbox" id="pTemplate" checked>
-      Tạo sẵn danh sách 45 công việc mẫu (7 giai đoạn NPD)
+      Pre-populate 45 standard NPD tasks (7 stages)
     </label>
 
     <div class="dialog-actions">
-      <button type="button" class="btn-danger" id="pDeleteBtn">Xóa sản phẩm</button>
+      <button type="button" class="btn-danger" id="pDeleteBtn">Delete Product</button>
       <div class="toolbar-group">
-        <button type="button" class="btn" id="pCancelBtn">Hủy</button>
-        <button type="button" class="btn-pri" id="pSaveBtn">Lưu</button>
+        <button type="button" class="btn" id="pCancelBtn">Cancel</button>
+        <button type="button" class="btn-pri" id="pSaveBtn">Save</button>
       </div>
     </div>
   </dialog>
 
-  <!-- Modal Chi tiết Công việc -->
+  <!-- Task Detail Modal -->
   <dialog id="taskDialog">
-    <h3 id="taskDlgTitle">Chi tiết công việc</h3>
-    <label for="tStage">Giai đoạn</label>
+    <h3 id="taskDlgTitle">Task Details</h3>
+    <label for="tStage">Stage</label>
     <select id="tStage"></select>
 
-    <label for="tName">Tên công việc</label>
+    <label for="tName">Task Name</label>
     <input type="text" id="tName">
 
     <div class="form-grid-2">
       <div>
-        <label for="tPic">PIC (người phụ trách)</label>
+        <label for="tPic">PIC (Person in Charge)</label>
         <input type="text" id="tPic" placeholder="NPD, RD...">
       </div>
       <div>
-        <label for="tStatus">Trạng thái</label>
+        <label for="tStatus">Status</label>
         <select id="tStatus">
-          <option value="not">Chưa làm</option>
-          <option value="prog">Đang làm</option>
-          <option value="done">Hoàn thành</option>
+          <option value="not">Not Started</option>
+          <option value="prog">In Progress</option>
+          <option value="done">Done</option>
         </select>
       </div>
     </div>
 
     <div class="form-grid-2">
       <div>
-        <label for="tStart">Bắt đầu</label>
+        <label for="tStart">Start Date</label>
         <input type="date" id="tStart">
       </div>
       <div>
-        <label for="tEnd">Hạn / kết thúc</label>
+        <label for="tEnd">Due / End Date</label>
         <input type="date" id="tEnd">
       </div>
     </div>
@@ -128,169 +128,169 @@
     <div class="form-grid-2" style="margin-top:10px;align-items:center">
       <label class="check-inline" style="margin:0">
         <input type="checkbox" id="tMilestone">
-        Đánh dấu Mốc chốt (Milestone ◆)
+        Mark as Milestone (◆)
       </label>
       <div>
-        <label for="tPriority" style="margin-top:0">Mức độ ưu tiên</label>
+        <label for="tPriority" style="margin-top:0">Priority</label>
         <select id="tPriority">
-          <option value="normal">Bình thường</option>
-          <option value="high">Ưu tiên cao (!)</option>
+          <option value="normal">Normal</option>
+          <option value="high">High Priority (!)</option>
         </select>
       </div>
     </div>
 
-    <label for="tNote">Ghi chú / Vướng mắc</label>
-    <textarea id="tNote" rows="3" placeholder="Ghi chú chi tiết, nguyên nhân trễ hoặc phụ thuộc..."></textarea>
+    <label for="tNote">Notes / Blockers</label>
+    <textarea id="tNote" rows="3" placeholder="Detailed notes, delay reasons, or dependencies..."></textarea>
 
     <div class="dialog-actions">
-      <button type="button" class="btn-danger" id="tDeleteBtn">Xóa việc</button>
+      <button type="button" class="btn-danger" id="tDeleteBtn">Delete Task</button>
       <div class="toolbar-group">
-        <button type="button" class="btn" id="tCancelBtn">Hủy</button>
-        <button type="button" class="btn-pri" id="tSaveBtn">Lưu</button>
+        <button type="button" class="btn" id="tCancelBtn">Cancel</button>
+        <button type="button" class="btn-pri" id="tSaveBtn">Save</button>
       </div>
     </div>
   </dialog>
 
-  <!-- Modal Thêm / Sửa Mẫu R&D -->
+  <!-- R&D Sample Modal -->
   <dialog id="sampleDialog">
-    <h3 id="sampleDlgTitle">Thêm mã mẫu R&amp;D</h3>
+    <h3 id="sampleDlgTitle">Add R&amp;D Sample</h3>
 
-    <label for="sProduct">Thuộc sản phẩm</label>
+    <label for="sProduct">Product</label>
     <select id="sProduct"></select>
 
     <div class="form-grid-2">
       <div>
-        <label for="sCode">Mã RD</label>
-        <input type="text" id="sCode" placeholder="VD: RD-ST27-01">
+        <label for="sCode">RD Code</label>
+        <input type="text" id="sCode" placeholder="e.g., RD-ST27-01">
       </div>
       <div>
-        <label for="sVersion">Phiên bản / Mô tả công thức</label>
-        <input type="text" id="sVersion" placeholder="VD: V1 - Ít ngọt">
+        <label for="sVersion">Version / Formula Description</label>
+        <input type="text" id="sVersion" placeholder="e.g., V1 - Less Sweet">
       </div>
     </div>
 
     <div class="form-grid-3">
       <div>
-        <label for="sPic">PIC R&amp;D</label>
+        <label for="sPic">R&amp;D PIC</label>
         <input type="text" id="sPic" placeholder="RD - Minh">
       </div>
       <div>
-        <label for="sTestDate">Ngày test</label>
+        <label for="sTestDate">Test Date</label>
         <input type="date" id="sTestDate">
       </div>
       <div>
-        <label for="sResult">Kết quả test</label>
+        <label for="sResult">Test Result</label>
         <select id="sResult">
-          <option value="pending">Chờ test</option>
-          <option value="go">Đạt (Go)</option>
-          <option value="revise">Chỉnh sửa</option>
-          <option value="nogo">Không đạt</option>
+          <option value="pending">Pending</option>
+          <option value="go">Pass (Go)</option>
+          <option value="revise">Revise</option>
+          <option value="nogo">Fail (No-Go)</option>
         </select>
       </div>
     </div>
 
     <div id="sInitialPriceBlock" class="form-grid-3">
       <div>
-        <label for="sCvsPrice">Giá CVS (đ)</label>
+        <label for="sCvsPrice">CVS Cost (VND)</label>
         <input type="number" id="sCvsPrice" min="0" step="100" placeholder="49500">
       </div>
       <div>
-        <label for="sPackCost">Bao bì / NL (đ)</label>
+        <label for="sPackCost">Pack / Ingred. (VND)</label>
         <input type="number" id="sPackCost" min="0" step="100" placeholder="10800">
       </div>
       <div>
-        <label for="sSellPrice">Giá bán DK (đ)</label>
+        <label for="sSellPrice">Est. Sell Price (VND)</label>
         <input type="number" id="sSellPrice" min="0" step="100" placeholder="112000">
       </div>
     </div>
 
     <div id="sUploadBlock" style="margin-top:12px">
-      <label for="sModalImages">Ảnh đánh giá mẫu (chọn được nhiều ảnh)</label>
+      <label for="sModalImages">Sample Evaluation Photos (multiple allowed)</label>
       <input type="file" id="sModalImages" accept="image/*" multiple>
     </div>
 
     <label class="check-inline" style="margin-top:12px">
       <input type="checkbox" id="sApproved">
-      Chọn làm mẫu chốt sản xuất cho sản phẩm này
+      Approve as final production formula for this product
     </label>
 
-    <label for="sNote">Ghi chú cảm quan / QA / Shelf-life</label>
-    <textarea id="sNote" rows="2" placeholder="Đánh giá hương vị, độ ổn định, phản hồi sau tasting..."></textarea>
+    <label for="sNote">Sensory / QA / Shelf-life Notes</label>
+    <textarea id="sNote" rows="2" placeholder="Flavor evaluation, stability, tasting feedback..."></textarea>
 
     <div class="dialog-actions">
-      <button type="button" class="btn-danger" id="sDeleteBtn">Xóa mẫu</button>
+      <button type="button" class="btn-danger" id="sDeleteBtn">Delete Sample</button>
       <div class="toolbar-group">
-        <button type="button" class="btn" id="sCancelBtn">Hủy</button>
-        <button type="button" class="btn-pri" id="sSaveBtn">Lưu mẫu</button>
+        <button type="button" class="btn" id="sCancelBtn">Cancel</button>
+        <button type="button" class="btn-pri" id="sSaveBtn">Save Sample</button>
       </div>
     </div>
   </dialog>
 
-  <!-- Modal Cập nhật Giá (Ghi lịch sử) -->
+  <!-- Price Update Modal -->
   <dialog id="priceDialog">
-    <h3>Cập nhật giá mẫu R&amp;D</h3>
+    <h3>Update R&amp;D Sample Pricing</h3>
     <div id="priceTargetInfo" class="mut" style="margin-top:4px"></div>
 
     <div class="form-grid-3">
       <div>
-        <label for="prCvs">Giá CVS mới (đ)</label>
+        <label for="prCvs">New CVS Cost (VND)</label>
         <input type="number" id="prCvs" min="0" step="100">
       </div>
       <div>
-        <label for="prPack">Bao bì / NL mới (đ)</label>
+        <label for="prPack">New Pack / Ingred. (VND)</label>
         <input type="number" id="prPack" min="0" step="100">
       </div>
       <div>
-        <label for="prSell">Giá bán DK mới (đ)</label>
+        <label for="prSell">New Est. Sell Price (VND)</label>
         <input type="number" id="prSell" min="0" step="100">
       </div>
     </div>
 
     <div class="form-grid-2">
       <div>
-        <label for="prDate">Ngày cập nhật</label>
+        <label for="prDate">Effective Date</label>
         <input type="date" id="prDate">
       </div>
       <div>
-        <label>Biên lợi nhuận dự kiến</label>
+        <label>Projected Gross Margin</label>
         <div id="prMarginPreview" class="mono-sm" style="padding:9px 0;font-weight:600">—</div>
       </div>
     </div>
 
-    <label for="prReason">Lý do cập nhật giá</label>
-    <input type="text" id="prReason" placeholder="VD: Đổi nhà cung cấp bao bì, tối ưu định lượng hương liệu...">
+    <label for="prReason">Reason for Price Change</label>
+    <input type="text" id="prReason" placeholder="e.g., Switched packaging supplier, optimized flavor dosage...">
 
     <div class="dialog-actions">
       <span></span>
       <div class="toolbar-group">
-        <button type="button" class="btn" id="prCancelBtn">Hủy</button>
-        <button type="button" class="btn-pri" id="prSaveBtn">Lưu giá mới</button>
+        <button type="button" class="btn" id="prCancelBtn">Cancel</button>
+        <button type="button" class="btn-pri" id="prSaveBtn">Save New Price</button>
       </div>
     </div>
   </dialog>
 
-  <!-- Modal Lịch sử Giá -->
+  <!-- Price History Modal -->
   <dialog id="historyDialog" class="dialog-wide">
-    <h3>Lịch sử cập nhật giá</h3>
+    <h3>Price Update History</h3>
     <div id="histTargetInfo" class="mut" style="margin:4px 0 12px"></div>
     <div id="histContent" class="table-wrap"></div>
     <div class="dialog-actions">
       <span></span>
-      <button type="button" class="btn" id="histCloseBtn">Đóng</button>
+      <button type="button" class="btn" id="histCloseBtn">Close</button>
     </div>
   </dialog>
 
-  <!-- Lightbox Phóng to Ảnh Đánh giá Mẫu -->
+  <!-- Sample Photo Lightbox -->
   <dialog id="lightboxDialog" class="dialog-wide">
     <div style="display:flex;justify-content:space-between;align-items:center;gap:12px">
       <div>
-        <h3 id="lbTitle">Hình ảnh mẫu R&amp;D</h3>
+        <h3 id="lbTitle">R&amp;D Sample Photo</h3>
         <div id="lbSubtitle" class="mut"></div>
       </div>
       <div class="toolbar-group">
-        <button type="button" class="btn-sm" id="lbPrevBtn">‹ Trước</button>
-        <button type="button" class="btn-sm" id="lbNextBtn">Sau ›</button>
-        <button type="button" class="btn-sm" id="lbCloseBtn">Đóng</button>
+        <button type="button" class="btn-sm" id="lbPrevBtn">‹ Prev</button>
+        <button type="button" class="btn-sm" id="lbNextBtn">Next ›</button>
+        <button type="button" class="btn-sm" id="lbCloseBtn">Close</button>
       </div>
     </div>
     <div class="lightbox-stage">
@@ -298,52 +298,52 @@
     </div>
     <div id="lbCaptionRow" style="margin-top:10px;display:flex;gap:8px;align-items:center;flex-wrap:wrap">
       <span id="lbCaptionText" class="mut" style="flex:1"></span>
-      <input type="text" id="lbCaptionInput" placeholder="Nhập chú thích ảnh..." style="flex:1" hidden>
-      <button type="button" class="btn-sm" id="lbSaveCapBtn" hidden>Lưu chú thích</button>
-      <button type="button" class="btn-sm btn-danger" id="lbDeleteImgBtn" hidden>Xóa ảnh</button>
+      <input type="text" id="lbCaptionInput" placeholder="Enter photo caption..." style="flex:1" hidden>
+      <button type="button" class="btn-sm" id="lbSaveCapBtn" hidden>Save Caption</button>
+      <button type="button" class="btn-sm btn-danger" id="lbDeleteImgBtn" hidden>Delete Photo</button>
     </div>
     <div id="lbThumbs" class="lightbox-thumbs"></div>
   </dialog>
 
-  <!-- Modal Quản lý Thành viên & Phân quyền (Admin) -->
+  <!-- Workspace Member Access Modal (Admin) -->
   <dialog id="membersDialog" class="dialog-wide">
-    <h3>Phân quyền Thành viên Workspace</h3>
+    <h3>Workspace Member Permissions</h3>
     <p class="mut" style="margin:4px 0 12px">
-      Mặc định mọi tài khoản đăng nhập mới đều ở quyền <strong>Chỉ Xem</strong> (phù hợp cho Sếp và các team theo dõi). Thêm email bên dưới để cấp quyền <strong>Nhập liệu</strong> cho người cần chỉnh sửa.
+      New Google accounts default to <strong>View Only</strong> (ideal for leadership and cross-functional teams). Add an email below to grant <strong>Edit Mode</strong> access.
     </p>
     <div class="form-grid-3" style="align-items:end">
       <div>
-        <label for="memEmailInput">Email Google thành viên</label>
-        <input type="email" id="memEmailInput" placeholder="vd: rd.lead@gmail.com">
+        <label for="memEmailInput">Member Google Email</label>
+        <input type="email" id="memEmailInput" placeholder="e.g., rd.lead@gmail.com">
       </div>
       <div>
-        <label for="memRoleSelect">Vai trò</label>
+        <label for="memRoleSelect">Role</label>
         <select id="memRoleSelect">
-          <option value="editor">Nhập liệu (Editor)</option>
-          <option value="viewer">Chỉ Xem (Viewer)</option>
-          <option value="admin">Quản trị (Admin)</option>
+          <option value="editor">Editor (Can edit)</option>
+          <option value="viewer">Viewer (Read only)</option>
+          <option value="admin">Admin (Full control)</option>
         </select>
       </div>
       <div>
-        <button type="button" class="btn-pri" id="memAddBtn" style="width:100%">Cấp quyền</button>
+        <button type="button" class="btn-pri" id="memAddBtn" style="width:100%">Grant Access</button>
       </div>
     </div>
     <div id="memListWrap" class="table-wrap" style="margin-top:14px"></div>
     <div class="dialog-actions">
       <span></span>
-      <button type="button" class="btn" id="memCloseBtn">Đóng</button>
+      <button type="button" class="btn" id="memCloseBtn">Close</button>
     </div>
   </dialog>
 
-  <!-- Modal Xác nhận nội bộ -->
+  <!-- Internal Confirm Modal -->
   <dialog id="confirmDialog">
-    <h3 id="confirmTitle">Xác nhận</h3>
+    <h3 id="confirmTitle">Confirm</h3>
     <p id="confirmMessage" style="margin:10px 0 0"></p>
     <div class="dialog-actions">
       <span></span>
       <div class="toolbar-group">
-        <button type="button" class="btn" id="confirmCancelBtn">Hủy</button>
-        <button type="button" class="btn-pri" id="confirmOkBtn">Đồng ý</button>
+        <button type="button" class="btn" id="confirmCancelBtn">Cancel</button>
+        <button type="button" class="btn-pri" id="confirmOkBtn">Confirm</button>
       </div>
     </div>
   </dialog>
