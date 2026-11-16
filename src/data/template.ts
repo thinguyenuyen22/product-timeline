@@ -107,6 +107,7 @@ export function createDemoProducts(): Product[] {
           priceHistory: [
             { id: uid(), date: '2026-04-12', cvsPrice: 54000, packagingCost: 11500, sellPrice: 115000, reason: 'Tính giá dự toán mẫu đầu tiên' },
           ],
+          images: [],
         },
         {
           id: uid(),
@@ -125,6 +126,7 @@ export function createDemoProducts(): Product[] {
             { id: uid(), date: '2026-04-28', cvsPrice: 52000, packagingCost: 11500, sellPrice: 115000, reason: 'Chốt công thức V2 sau tasting' },
             { id: uid(), date: '2026-09-18', cvsPrice: 49500, packagingCost: 10800, sellPrice: 112000, reason: 'Đàm phán lại giá chai PET & tối ưu tỷ lệ cốt trà' },
           ],
+          images: [],
         },
       ],
     },
@@ -159,6 +161,7 @@ export function createDemoProducts(): Product[] {
           priceHistory: [
             { id: uid(), date: '2026-05-20', cvsPrice: 61000, packagingCost: 9800, sellPrice: 129000, reason: 'Báo giá thử nghiệm V1' },
           ],
+          images: [],
         },
         {
           id: uid(),
@@ -177,6 +180,7 @@ export function createDemoProducts(): Product[] {
             { id: uid(), date: '2026-06-28', cvsPrice: 65000, packagingCost: 9800, sellPrice: 135000, reason: 'Tăng tỷ lệ xoài lên 35%' },
             { id: uid(), date: '2026-09-02', cvsPrice: 63500, packagingCost: 9500, sellPrice: 135000, reason: 'Chốt hợp đồng mùa vụ xoài & túi Doypack mới' },
           ],
+          images: [],
         },
       ],
     },

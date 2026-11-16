@@ -4,40 +4,52 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Product Timeline Tracker</title>
-  <meta name="description" content="Theo dõi tiến độ phát triển sản phẩm theo chu kỳ 03/2026–03/2027, chỉnh sửa trực tiếp trên timeline, quản lý mẫu R&D và báo cáo tổng quan.">
+  <meta name="description" content="Theo dõi tiến độ phát triển sản phẩm theo chu kỳ 03/2026–03/2027, quản lý mẫu R&D kèm hình ảnh đánh giá, lưu trữ dài hạn trên Cloud SQL.">
   <meta property="og:title" content="Product Timeline Tracker">
-  <meta property="og:description" content="Quản lý timeline phát triển sản phẩm, mẫu R&D, lịch sử giá và báo cáo tiến độ tổng quan.">
+  <meta property="og:description" content="Quản lý timeline phát triển sản phẩm 13 tháng, đánh giá mẫu R&D với hình ảnh và báo cáo tổng quan dùng chung.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@500;600;700&family=Public+Sans:wght@400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/src/style.css">
 </head>
 <body>
-  <header class="topbar">
+  <header class="topbar" id="topbar" hidden>
     <div class="topbar-inner">
       <a href="#report" class="brand-wordmark" id="brandLink">Product Timeline</a>
       <nav class="main-nav" aria-label="Điều hướng chính">
-        <button type="button" class="nav-link active" data-tab="report">Báo cáo tổng quan</button>
+        <button type="button" class="nav-link active" data-tab="report">Tổng quan</button>
         <button type="button" class="nav-link" data-tab="products">Sản phẩm</button>
         <button type="button" class="nav-link" data-tab="samples">Mẫu R&amp;D &amp; Giá</button>
       </nav>
       <div class="topbar-cta">
-        <button type="button" class="btn-pri" id="newProductBtn">+ Sản phẩm mới</button>
+        <span class="user-inline" id="userLabel"></span>
+        <button type="button" class="btn-sm" id="signOutBtn">Đăng xuất</button>
+        <button type="button" class="btn-pri" id="newProductBtn" hidden>+ Sản phẩm mới</button>
       </div>
     </div>
   </header>
 
-  <div class="workspace-bar">
+  <div class="workspace-bar" id="workspaceBar" hidden>
     <div class="workspace-bar-inner">
       <div class="cycle-picker">
-        <label for="cycleSelect" class="cycle-label">Chu kỳ kế hoạch:</label>
+        <label for="cycleSelect" class="cycle-label">Chu kỳ:</label>
         <select id="cycleSelect" class="select-auto"></select>
+
+        <div class="segmented" id="modeSwitchWrap" hidden role="group" aria-label="Chế độ giao diện">
+          <button type="button" class="active" data-mode="view">Chế độ Xem</button>
+          <button type="button" data-mode="edit">Chế độ Nhập liệu</button>
+        </div>
+        <span class="mut" id="viewerBadge" hidden>Quyền: Chỉ Xem</span>
       </div>
+
       <div class="toolbar-group">
+        <button type="button" class="btn-sm" id="refreshBtn" title="Tải dữ liệu mới nhất từ Cloud SQL">Làm mới</button>
+        <button type="button" class="btn-sm" id="membersBtn" hidden>Thành viên</button>
         <button type="button" class="btn-sm" id="themeToggleBtn">Chế độ tối</button>
         <button type="button" class="btn-sm" id="exportBtn" title="Tải file sao lưu JSON">Xuất JSON</button>
-        <button type="button" class="btn-sm" id="importBtn" title="Nhập từ file sao lưu JSON">Nhập JSON</button>
+        <button type="button" class="btn-sm" id="importBtn" hidden title="Nhập từ file sao lưu JSON">Nhập JSON</button>
         <input type="file" id="importFileInput" accept=".json,application/json" hidden>
+        <input type="file" id="sampleImageUploadInput" accept="image/*" multiple hidden>
       </div>
     </div>
   </div>
@@ -192,6 +204,11 @@
       </div>
     </div>
 
+    <div id="sUploadBlock" style="margin-top:12px">
+      <label for="sModalImages">Ảnh đánh giá mẫu (chọn được nhiều ảnh)</label>
+      <input type="file" id="sModalImages" accept="image/*" multiple>
+    </div>
+
     <label class="check-inline" style="margin-top:12px">
       <input type="checkbox" id="sApproved">
       Chọn làm mẫu chốt sản xuất cho sản phẩm này
@@ -263,7 +280,62 @@
     </div>
   </dialog>
 
-  <!-- Modal Xác nhận nội bộ (thay thế confirm/alert) -->
+  <!-- Lightbox Phóng to Ảnh Đánh giá Mẫu -->
+  <dialog id="lightboxDialog" class="dialog-wide">
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:12px">
+      <div>
+        <h3 id="lbTitle">Hình ảnh mẫu R&amp;D</h3>
+        <div id="lbSubtitle" class="mut"></div>
+      </div>
+      <div class="toolbar-group">
+        <button type="button" class="btn-sm" id="lbPrevBtn">‹ Trước</button>
+        <button type="button" class="btn-sm" id="lbNextBtn">Sau ›</button>
+        <button type="button" class="btn-sm" id="lbCloseBtn">Đóng</button>
+      </div>
+    </div>
+    <div class="lightbox-stage">
+      <img id="lbImg" src="" alt="" referrerpolicy="no-referrer">
+    </div>
+    <div id="lbCaptionRow" style="margin-top:10px;display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+      <span id="lbCaptionText" class="mut" style="flex:1"></span>
+      <input type="text" id="lbCaptionInput" placeholder="Nhập chú thích ảnh..." style="flex:1" hidden>
+      <button type="button" class="btn-sm" id="lbSaveCapBtn" hidden>Lưu chú thích</button>
+      <button type="button" class="btn-sm btn-danger" id="lbDeleteImgBtn" hidden>Xóa ảnh</button>
+    </div>
+    <div id="lbThumbs" class="lightbox-thumbs"></div>
+  </dialog>
+
+  <!-- Modal Quản lý Thành viên & Phân quyền (Admin) -->
+  <dialog id="membersDialog" class="dialog-wide">
+    <h3>Phân quyền Thành viên Workspace</h3>
+    <p class="mut" style="margin:4px 0 12px">
+      Mặc định mọi tài khoản đăng nhập mới đều ở quyền <strong>Chỉ Xem</strong> (phù hợp cho Sếp và các team theo dõi). Thêm email bên dưới để cấp quyền <strong>Nhập liệu</strong> cho người cần chỉnh sửa.
+    </p>
+    <div class="form-grid-3" style="align-items:end">
+      <div>
+        <label for="memEmailInput">Email Google thành viên</label>
+        <input type="email" id="memEmailInput" placeholder="vd: rd.lead@gmail.com">
+      </div>
+      <div>
+        <label for="memRoleSelect">Vai trò</label>
+        <select id="memRoleSelect">
+          <option value="editor">Nhập liệu (Editor)</option>
+          <option value="viewer">Chỉ Xem (Viewer)</option>
+          <option value="admin">Quản trị (Admin)</option>
+        </select>
+      </div>
+      <div>
+        <button type="button" class="btn-pri" id="memAddBtn" style="width:100%">Cấp quyền</button>
+      </div>
+    </div>
+    <div id="memListWrap" class="table-wrap" style="margin-top:14px"></div>
+    <div class="dialog-actions">
+      <span></span>
+      <button type="button" class="btn" id="memCloseBtn">Đóng</button>
+    </div>
+  </dialog>
+
+  <!-- Modal Xác nhận nội bộ -->
   <dialog id="confirmDialog">
     <h3 id="confirmTitle">Xác nhận</h3>
     <p id="confirmMessage" style="margin:10px 0 0"></p>

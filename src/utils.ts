@@ -1,6 +1,5 @@
 import type {
-  CycleMonthGroup,
-  CycleWeek,
+  CycleMonth,
   EffectiveStatus,
   Product,
   RDSample,
@@ -94,109 +93,57 @@ export function inferCycleFromDate(iso?: string): number {
   return m >= 3 ? y : y - 1;
 }
 
-function toIsoUTC(dt: Date): string {
-  const y = dt.getUTCFullYear();
-  const m = String(dt.getUTCMonth() + 1).padStart(2, '0');
-  const d = String(dt.getUTCDate()).padStart(2, '0');
-  return `${y}-${m}-${d}`;
-}
-
 /**
- * Generates Monday-Sunday weeks covering 01/03/<cycleStartYear> through 31/03/<cycleStartYear + 1> (13 months).
+ * Generates 13 calendar months from 03/<cycleStartYear> through 03/<cycleStartYear + 1>.
  */
-export function buildCycleCalendar(cycleStartYear: number): {
-  weeks: CycleWeek[];
-  months: CycleMonthGroup[];
-  cycleStartIso: string;
-  cycleEndIso: string;
-} {
-  const march1 = new Date(Date.UTC(cycleStartYear, 2, 1)); // month 2 = March
-  const march31Next = new Date(Date.UTC(cycleStartYear + 1, 2, 31));
-  const cycleStartIso = `${cycleStartYear}-03-01`;
-  const cycleEndIso = `${cycleStartYear + 1}-03-31`;
-
-  // Find Monday of the week whose Thursday >= March 1 (guarantees Week 1 belongs to T3/YYYY)
-  const dow = march1.getUTCDay(); // 0=Sun..6=Sat
-  const daysToMonday = dow === 0 ? 1 : dow <= 4 ? -(dow - 1) : 8 - dow;
-  const firstMonday = new Date(march1.getTime() + daysToMonday * 86400000);
-  // Ensure March 1 itself isn't left unmapped if it was Fri/Sat/Sun — shift back to Monday containing March 1 if needed,
-  // while keeping month assignment clamped to 03/YYYY..03/(YYYY+1)
-  const containMondayOffset = dow === 0 ? -6 : -(dow - 1);
-  const startMonday =
-    containMondayOffset < daysToMonday && march1.getUTCDate() === 1 && dow !== 0
-      ? new Date(march1.getTime() + containMondayOffset * 86400000)
-      : firstMonday;
-
-  const weeks: CycleWeek[] = [];
-  let cursor = startMonday.getTime();
-  let idx = 1;
-  while (cursor <= march31Next.getTime()) {
-    const mon = new Date(cursor);
-    const sun = new Date(cursor + 6 * 86400000);
-    const thu = new Date(cursor + 3 * 86400000);
-
-    // Assign month label based on Thursday, clamped within [03/N .. 03/N+1]
-    let mYear = thu.getUTCFullYear();
-    let mNum = thu.getUTCMonth() + 1;
-    if (mYear < cycleStartYear || (mYear === cycleStartYear && mNum < 3)) {
-      mYear = cycleStartYear;
-      mNum = 3;
-    }
-    if (mYear > cycleStartYear + 1 || (mYear === cycleStartYear + 1 && mNum > 3)) {
-      mYear = cycleStartYear + 1;
-      mNum = 3;
-    }
-    const monthKey = `${mYear}-${String(mNum).padStart(2, '0')}`;
-    const monthLabel = `T${mNum}/${String(mYear).slice(2)}`;
-
-    weeks.push({
-      index: idx,
-      startDate: toIsoUTC(mon),
-      endDate: toIsoUTC(sun),
-      monthKey,
-      monthLabel,
+export function buildCycleMonths(cycleStartYear: number): CycleMonth[] {
+  const months: CycleMonth[] = [];
+  for (let i = 0; i < 13; i++) {
+    const totalM = 2 + i; // 0-indexed month: 2 = March
+    const yr = cycleStartYear + Math.floor(totalM / 12);
+    const m0 = totalM % 12; // 0..11
+    const m1 = m0 + 1; // 1..12
+    const lastDay = new Date(Date.UTC(yr, m0 + 1, 0)).getUTCDate();
+    const mm = String(m1).padStart(2, '0');
+    const key = `${yr}-${mm}`;
+    months.push({
+      index: i + 1,
+      key,
+      label: `T${m1}/${String(yr).slice(2)}`,
+      startDate: `${key}-01`,
+      endDate: `${key}-${String(lastDay).padStart(2, '0')}`,
     });
-
-    idx += 1;
-    cursor += 7 * 86400000;
   }
-
-  const months: CycleMonthGroup[] = [];
-  for (const w of weeks) {
-    const last = months[months.length - 1];
-    if (last && last.key === w.monthKey) {
-      last.span += 1;
-    } else {
-      months.push({ key: w.monthKey, label: w.monthLabel, span: 1 });
-    }
-  }
-
-  return { weeks, months, cycleStartIso, cycleEndIso };
+  return months;
 }
 
-export function getTaskWeekSpan(
+export function getTaskMonthSpan(
   task: Task,
-  weeks: CycleWeek[]
-): { startIdx: number; endIdx: number; clipsBefore: boolean; clipsAfter: boolean } | null {
+  months: CycleMonth[]
+): {
+  startIdx: number;
+  endIdx: number;
+  clipsBefore: boolean;
+  clipsAfter: boolean;
+  startIso: string;
+  endIso: string;
+} | null {
   const a = task.start || task.end;
   const b = task.end || task.start;
-  if (!a || !b || !weeks.length) return null;
-  const start = a <= b ? a : b;
-  const end = a <= b ? b : a;
+  if (!a || !b || !months.length) return null;
+  const startIso = a <= b ? a : b;
+  const endIso = a <= b ? b : a;
 
-  const firstWeekStart = weeks[0].startDate;
-  const lastWeekEnd = weeks[weeks.length - 1].endDate;
-
-  if (end < firstWeekStart || start > lastWeekEnd) {
-    return null;
-  }
+  const firstStart = months[0].startDate;
+  const lastEnd = months[months.length - 1].endDate;
+  if (endIso < firstStart || startIso > lastEnd) return null;
 
   let startIdx = -1;
   let endIdx = -1;
-  for (const w of weeks) {
-    if (w.endDate >= start && w.startDate <= end) {
-      if (startIdx === -1) startIdx = w.index;
-      endIdx = w.index;
+  for (const m of months) {
+    if (m.endDate >= startIso && m.startDate <= endIso) {
+      if (startIdx === -1) startIdx = m.index;
+      endIdx = m.index;
     }
   }
   if (startIdx === -1) return null;
@@ -204,9 +151,30 @@ export function getTaskWeekSpan(
   return {
     startIdx,
     endIdx,
-    clipsBefore: start < firstWeekStart,
-    clipsAfter: end > lastWeekEnd,
+    clipsBefore: startIso < firstStart,
+    clipsAfter: endIso > lastEnd,
+    startIso,
+    endIso,
   };
+}
+
+export function formatMonthCellText(
+  month: CycleMonth,
+  span: { startIdx: number; endIdx: number; startIso: string; endIso: string; clipsBefore: boolean; clipsAfter: boolean }
+): string {
+  const isStart = month.index === span.startIdx;
+  const isEnd = month.index === span.endIdx;
+  const d1 = span.startIso.slice(8, 10);
+  const d2 = span.endIso.slice(8, 10);
+
+  if (isStart && isEnd) {
+    if (span.clipsBefore) return `‹→${d2}`;
+    if (span.clipsAfter) return `${d1}→›`;
+    return d1 === d2 ? d1 : `${d1}–${d2}`;
+  }
+  if (isStart) return span.clipsBefore ? '‹—' : `${d1}→`;
+  if (isEnd) return span.clipsAfter ? '—›' : `→${d2}`;
+  return '•••';
 }
 
 export function getProductStats(product: Product, today = getTodayStr()) {
@@ -227,4 +195,55 @@ export function getPrimarySample(product: Product): RDSample | null {
     samples.find((s) => s.testResult === 'go') ||
     samples[samples.length - 1]
   );
+}
+
+/**
+ * Compresses an uploaded image File client-side to WebP/JPEG (max 1200px longest side)
+ * so multi-image uploads are fast and stored cleanly in Cloud SQL.
+ */
+export function compressImageFile(
+  file: File,
+  maxDimension = 1200,
+  quality = 0.82
+): Promise<{ dataUrl: string; mimeType: string }> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = () => reject(new Error('Không đọc được file ảnh.'));
+    reader.onload = () => {
+      const img = new Image();
+      img.onerror = () => reject(new Error('File không phải hình ảnh hợp lệ.'));
+      img.onload = () => {
+        let w = img.width;
+        let h = img.height;
+        if (w > maxDimension || h > maxDimension) {
+          if (w >= h) {
+            h = Math.round((h * maxDimension) / w);
+            w = maxDimension;
+          } else {
+            w = Math.round((w * maxDimension) / h);
+            h = maxDimension;
+          }
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = w;
+        canvas.height = h;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) {
+          reject(new Error('Trình duyệt không hỗ trợ xử lý ảnh.'));
+          return;
+        }
+        ctx.drawImage(img, 0, 0, w, h);
+        const mimeType = 'image/webp';
+        let dataUrl = canvas.toDataURL(mimeType, quality);
+        if (!dataUrl.startsWith('data:image/webp')) {
+          dataUrl = canvas.toDataURL('image/jpeg', quality);
+          resolve({ dataUrl, mimeType: 'image/jpeg' });
+          return;
+        }
+        resolve({ dataUrl, mimeType });
+      };
+      img.src = String(reader.result);
+    };
+    reader.readAsDataURL(file);
+  });
 }

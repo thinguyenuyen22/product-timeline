@@ -61,6 +61,15 @@ export function normalizeProduct(raw: any): Product {
               reason: String(h.reason || ''),
             }))
           : [],
+        images: Array.isArray(s.images)
+          ? s.images.map((img: any) => ({
+              id: String(img.id || uid()),
+              caption: String(img.caption || ''),
+              mimeType: String(img.mimeType || 'image/webp'),
+              dataUrl: String(img.dataUrl || ''),
+              uploadedBy: String(img.uploadedBy || ''),
+            }))
+          : [],
       }))
     : [];
 

@@ -3,6 +3,15 @@ export type EffectiveStatus = TaskStatus | 'late';
 export type TaskPriority = 'normal' | 'high';
 export type SampleTestResult = 'pending' | 'go' | 'revise' | 'nogo';
 export type ViewTab = 'report' | 'products' | 'samples';
+export type UserRole = 'admin' | 'editor' | 'viewer';
+
+export interface WorkspaceUser {
+  id: number;
+  uid: string;
+  email: string;
+  displayName: string;
+  role: UserRole;
+}
 
 export interface Task {
   id: string;
@@ -24,6 +33,15 @@ export interface PriceLog {
   packagingCost: number;
   sellPrice: number;
   reason: string;
+  updatedBy?: string;
+}
+
+export interface SampleImage {
+  id: string;
+  caption: string;
+  mimeType: string;
+  dataUrl: string;
+  uploadedBy?: string;
 }
 
 export interface RDSample {
@@ -40,6 +58,7 @@ export interface RDSample {
   sellPrice: number;
   updatedAt: string; // YYYY-MM-DD
   priceHistory: PriceLog[];
+  images: SampleImage[];
 }
 
 export interface Product {
@@ -48,21 +67,15 @@ export interface Product {
   category: string;
   launch: string; // YYYY-MM-DD or ''
   cycleStartYear: number; // e.g., 2026 => 03/2026 - 03/2027
-  year?: number; // legacy compatibility
+  year?: number;
   tasks: Task[];
   samples: RDSample[];
 }
 
-export interface CycleWeek {
-  index: number; // 1..N
-  startDate: string; // YYYY-MM-DD (Monday)
-  endDate: string;   // YYYY-MM-DD (Sunday)
-  monthKey: string;  // YYYY-MM
-  monthLabel: string; // e.g., T3/26
-}
-
-export interface CycleMonthGroup {
-  key: string;
-  label: string;
-  span: number;
+export interface CycleMonth {
+  index: number; // 1..13
+  key: string;   // YYYY-MM
+  label: string; // e.g., T3/26
+  startDate: string; // YYYY-MM-DD
+  endDate: string;   // YYYY-MM-DD
 }

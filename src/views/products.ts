@@ -12,7 +12,8 @@ import {
 export function renderProductsView(
   allProducts: Product[],
   currentCycle: number,
-  searchQuery: string
+  searchQuery: string,
+  editMode: boolean
 ): string {
   const today = getTodayStr();
   const q = searchQuery.trim().toLowerCase();
@@ -42,6 +43,7 @@ export function renderProductsView(
       totLate += s.counts.late;
 
       const primarySample = getPrimarySample(p);
+      const totalImgs = (p.samples || []).reduce((sum, samp) => sum + (samp.images || []).length, 0);
       const nextTask = (p.tasks || [])
         .filter((t) => t.status !== 'done' && t.end)
         .sort((a, b) => a.end.localeCompare(b.end))[0];
@@ -88,10 +90,10 @@ export function renderProductsView(
         </div>
 
         <div class="prod-card-actions">
-          <button type="button" class="btn-sm" data-open-product="${esc(p.id)}">Mở Timeline</button>
+          <button type="button" class="btn-sm" data-open-product="${esc(p.id)}">Xem Timeline</button>
           <button type="button" class="btn-sm" data-open-samples="${esc(p.id)}">Mẫu R&amp;D (${
         (p.samples || []).length
-      })</button>
+      }${totalImgs ? ` · ${totalImgs} ảnh` : ''})</button>
         </div>
       </article>`;
     })
@@ -101,7 +103,7 @@ export function renderProductsView(
   <div class="section-head">
     <div>
       <h2>Sản phẩm chu kỳ ${formatCycleLabel(currentCycle)}</h2>
-      <p class="mut">Theo dõi tiến độ từ tháng 03/${currentCycle} đến hết tháng 03/${currentCycle + 1}.</p>
+      <p class="mut">Theo dõi các sản phẩm triển khai từ tháng 03/${currentCycle} đến hết tháng 03/${currentCycle + 1}.</p>
     </div>
     <div class="toolbar-group">
       <input type="search" id="prodSearchInput" class="input-search" value="${esc(
@@ -127,14 +129,18 @@ export function renderProductsView(
               ? 'Không tìm thấy sản phẩm nào khớp từ khóa tìm kiếm.'
               : `Chưa có sản phẩm nào cho chu kỳ ${formatCycleLabel(currentCycle)}.`
           }</p>
-          <div class="toolbar-group" style="justify-content:center;margin-top:12px">
-            <button type="button" class="btn-pri" data-action="new-product">+ Sản phẩm mới</button>
-            ${
-              allProducts.length === 0
-                ? `<button type="button" class="btn" data-action="load-demo">Tải dữ liệu mẫu (2026–2027)</button>`
-                : ''
-            }
-          </div>
+          ${
+            editMode
+              ? `<div class="toolbar-group" style="justify-content:center;margin-top:12px">
+                  <button type="button" class="btn-pri" data-action="new-product">+ Sản phẩm mới</button>
+                  ${
+                    allProducts.length === 0
+                      ? `<button type="button" class="btn" data-action="load-demo">Tải dữ liệu mẫu (2026–2027)</button>`
+                      : ''
+                  }
+                </div>`
+              : ''
+          }
         </div>`
   }
   `;

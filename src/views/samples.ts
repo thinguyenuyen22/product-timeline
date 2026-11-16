@@ -18,7 +18,8 @@ export interface SamplesFilterState {
 export function renderSamplesView(
   allProducts: Product[],
   currentCycle: number,
-  filter: SamplesFilterState
+  filter: SamplesFilterState,
+  editMode: boolean
 ): string {
   const scopedProducts =
     filter.cycleMode === 'all'
@@ -66,6 +67,55 @@ export function renderSamplesView(
     .map(({ product, sample }) => {
       const margin = calcMarginPct(sample.cvsPrice, sample.sellPrice);
       const historyCount = (sample.priceHistory || []).length;
+      const imgs = sample.images || [];
+      const resMeta = SAMPLE_RESULT_META[sample.testResult];
+
+      const thumbsHtml = imgs
+        .slice(0, 4)
+        .map(
+          (img) =>
+            `<button type="button" class="thumb-btn" data-open-lightbox="${esc(product.id)}:${esc(
+              sample.id
+            )}:${esc(img.id)}" title="${esc(img.caption || sample.rdCode)}"><img src="${esc(
+              img.dataUrl
+            )}" alt="${esc(img.caption || sample.rdCode)}" referrerpolicy="no-referrer"></button>`
+        )
+        .join('');
+      const moreImgs = imgs.length > 4 ? `<span class="mut mono-sm">+${imgs.length - 4}</span>` : '';
+
+      const resultCell = editMode
+        ? `<select class="inline-status samp-${sample.testResult}" data-sample-result="${esc(
+            product.id
+          )}:${esc(sample.id)}" aria-label="Kết quả test mẫu">
+            <option value="pending" ${sample.testResult === 'pending' ? 'selected' : ''}>Chờ test</option>
+            <option value="go" ${sample.testResult === 'go' ? 'selected' : ''}>Đạt (Go)</option>
+            <option value="revise" ${sample.testResult === 'revise' ? 'selected' : ''}>Chỉnh sửa</option>
+            <option value="nogo" ${sample.testResult === 'nogo' ? 'selected' : ''}>Không đạt</option>
+          </select>`
+        : `<span class="status-txt" style="color:${resMeta.color}">${resMeta.label}</span>`;
+
+      const actionsCell = editMode
+        ? `<div class="row-actions">
+            <button type="button" class="btn-sm ${sample.isApproved ? 'btn-active' : ''}" data-sample-approve="${esc(
+            product.id
+          )}:${esc(sample.id)}" title="Đánh dấu mẫu chốt sản xuất">${
+            sample.isApproved ? 'Đã chốt' : 'Chốt'
+          }</button>
+            <button type="button" class="btn-sm" data-sample-price="${esc(product.id)}:${esc(
+            sample.id
+          )}">Giá</button>
+            <button type="button" class="btn-sm" data-sample-history="${esc(product.id)}:${esc(
+            sample.id
+          )}">Lịch sử (${historyCount})</button>
+            <button type="button" class="btn-sm" data-sample-edit="${esc(product.id)}:${esc(
+            sample.id
+          )}">Sửa</button>
+          </div>`
+        : `<div class="row-actions">
+            <button type="button" class="btn-sm" data-sample-history="${esc(product.id)}:${esc(
+            sample.id
+          )}">Lịch sử giá (${historyCount})</button>
+          </div>`;
 
       return `<tr class="${sample.isApproved ? 'row-approved' : ''}">
         <td>
@@ -81,21 +131,22 @@ export function renderSamplesView(
         <td>
           <div>${esc(sample.version || '—')}</div>
           ${sample.note ? `<div class="mut">${esc(sample.note)}</div>` : ''}
+          <div class="mut">${esc(sample.pic || '—')}${sample.testDate ? ` · Test ${fmtDate(sample.testDate, true)}` : ''}</div>
         </td>
         <td>
-          <div>${esc(sample.pic || '—')}</div>
-          <div class="mut num">${sample.testDate ? `Test: ${fmtDate(sample.testDate, true)}` : 'Chưa test'}</div>
+          <div class="thumb-strip">
+            ${thumbsHtml || (!editMode ? '<span class="mut">Chưa có ảnh</span>' : '')}
+            ${moreImgs}
+            ${
+              editMode
+                ? `<button type="button" class="btn-sm" data-trigger-upload="${esc(
+                    product.id
+                  )}:${esc(sample.id)}" title="Tải nhiều ảnh đánh giá mẫu">+ Ảnh</button>`
+                : ''
+            }
+          </div>
         </td>
-        <td>
-          <select class="inline-status samp-${sample.testResult}" data-sample-result="${esc(
-        product.id
-      )}:${esc(sample.id)}" aria-label="Kết quả test mẫu">
-            <option value="pending" ${sample.testResult === 'pending' ? 'selected' : ''}>Chờ test</option>
-            <option value="go" ${sample.testResult === 'go' ? 'selected' : ''}>Đạt (Go)</option>
-            <option value="revise" ${sample.testResult === 'revise' ? 'selected' : ''}>Chỉnh sửa</option>
-            <option value="nogo" ${sample.testResult === 'nogo' ? 'selected' : ''}>Không đạt</option>
-          </select>
-        </td>
+        <td>${resultCell}</td>
         <td class="num">
           <div class="mono-sm"><strong>${fmtMoney(sample.cvsPrice)}</strong></div>
           ${sample.updatedAt ? `<div class="mut mono-sm">${fmtDate(sample.updatedAt, true)}</div>` : ''}
@@ -103,24 +154,7 @@ export function renderSamplesView(
         <td class="num mono-sm">${fmtMoney(sample.packagingCost)}</td>
         <td class="num mono-sm"><strong>${fmtMoney(sample.sellPrice)}</strong></td>
         <td class="num mono-sm">${margin !== null ? `${margin}%` : '—'}</td>
-        <td>
-          <div class="row-actions">
-            <button type="button" class="btn-sm ${sample.isApproved ? 'btn-active' : ''}" data-sample-approve="${esc(
-        product.id
-      )}:${esc(sample.id)}" title="Đánh dấu mẫu chốt sản xuất">${
-        sample.isApproved ? 'Đã chốt' : 'Chốt mẫu'
-      }</button>
-            <button type="button" class="btn-sm" data-sample-price="${esc(product.id)}:${esc(
-        sample.id
-      )}">Cập nhật giá</button>
-            <button type="button" class="btn-sm" data-sample-history="${esc(product.id)}:${esc(
-        sample.id
-      )}">Lịch sử (${historyCount})</button>
-            <button type="button" class="btn-sm" data-sample-edit="${esc(product.id)}:${esc(
-        sample.id
-      )}">Sửa</button>
-          </div>
-        </td>
+        <td>${actionsCell}</td>
       </tr>`;
     })
     .join('');
@@ -132,10 +166,10 @@ export function renderSamplesView(
   return `
   <div class="section-head">
     <div>
-      <h2>Dashboard Mẫu R&amp;D &amp; Lịch sử Giá${
+      <h2>Đánh giá Mẫu R&amp;D &amp; Giá${
         selectedProductObj ? ` — ${esc(selectedProductObj.name)}` : ''
       }</h2>
-      <p class="mut">Theo dõi các mã RD theo từng phiên bản công thức, kết quả test cảm quan và lịch sử điều chỉnh giá CVS / giá bán.</p>
+      <p class="mut">Theo dõi các mã RD, hình ảnh đánh giá mẫu thực tế (bấm ảnh để phóng to), kết quả test và lịch sử cập nhật giá.</p>
     </div>
     <div class="toolbar-group">
       ${
@@ -143,7 +177,11 @@ export function renderSamplesView(
           ? `<button type="button" class="btn" data-clear-sample-prod>Xem tất cả SP</button>`
           : ''
       }
-      <button type="button" class="btn-pri" data-action="new-sample">+ Thêm mã RD</button>
+      ${
+        editMode
+          ? `<button type="button" class="btn-pri" data-action="new-sample">+ Thêm mã RD</button>`
+          : ''
+      }
     </div>
   </div>
 
@@ -199,8 +237,8 @@ export function renderSamplesView(
                 <tr>
                   <th>Mã RD</th>
                   <th>Sản phẩm</th>
-                  <th>Phiên bản / Công thức</th>
-                  <th>PIC · Ngày test</th>
+                  <th>Phiên bản / Đánh giá · PIC</th>
+                  <th>Hình ảnh mẫu</th>
                   <th>Kết quả test</th>
                   <th class="num">Giá CVS</th>
                   <th class="num">Bao bì / NL</th>
@@ -215,17 +253,16 @@ export function renderSamplesView(
         : `<div class="empty-box">
             <p>${
               allProducts.length === 0
-                ? 'Chưa có sản phẩm nào. Hãy tạo sản phẩm trước hoặc tải dữ liệu mẫu để quản lý mã RD.'
+                ? 'Chưa có sản phẩm nào.'
                 : 'Chưa có mã mẫu R&D nào khớp bộ lọc hiện tại.'
             }</p>
-            <div class="toolbar-group" style="justify-content:center;margin-top:12px">
-              ${
-                allProducts.length > 0
-                  ? `<button type="button" class="btn-pri" data-action="new-sample">+ Thêm mã RD đầu tiên</button>`
-                  : `<button type="button" class="btn-pri" data-action="new-product">+ Sản phẩm mới</button>
-                     <button type="button" class="btn" data-action="load-demo">Tải dữ liệu mẫu (2026–2027)</button>`
-              }
-            </div>
+            ${
+              editMode && allProducts.length > 0
+                ? `<div class="toolbar-group" style="justify-content:center;margin-top:12px">
+                    <button type="button" class="btn-pri" data-action="new-sample">+ Thêm mã RD đầu tiên</button>
+                  </div>`
+                : ''
+            }
           </div>`
     }
   </div>

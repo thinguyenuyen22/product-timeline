@@ -22,7 +22,9 @@ export interface ReportFilterState {
 export function renderReportView(
   allProducts: Product[],
   currentCycle: number,
-  filter: ReportFilterState
+  filter: ReportFilterState,
+  editMode: boolean,
+  legacyLocalCount: number
 ): string {
   const today = getTodayStr();
   const cycleProducts =
@@ -42,7 +44,6 @@ export function renderReportView(
     .slice()
     .sort((a, b) => (a.launch || '9999').localeCompare(b.launch || '9999'));
 
-  // Aggregate KPIs
   let totalDone = 0;
   let totalProg = 0;
   let totalNot = 0;
@@ -59,7 +60,7 @@ export function renderReportView(
     cycleStartYear: number;
     task: Task;
     stageName: string;
-    diffDays: number; // <0 overdue, >=0 upcoming
+    diffDays: number;
     isLate: boolean;
   }
 
@@ -143,9 +144,8 @@ export function renderReportView(
       const primarySample = getPrimarySample(p);
       const stageCells = STAGES.map((_, si) => {
         const ts = (p.tasks || []).filter((t) => t.stage === si);
-        if (!ts.length) {
-          return `<td class="num mut">—</td>`;
-        }
+        if (!ts.length) return `<td class="num mut">—</td>`;
+
         let done = 0;
         let late = 0;
         let prog = 0;
@@ -227,14 +227,26 @@ export function renderReportView(
         <td>${esc(item.task.pic || '—')}</td>
         <td class="num">${fmtDate(item.task.end, true)}</td>
         <td>${dueText}</td>
-        <td class="no-print">
-          <button type="button" class="btn-sm" data-quick-done="${esc(item.productId)}:${esc(
-        item.task.id
-      )}">Hoàn thành</button>
-        </td>
+        ${
+          editMode
+            ? `<td class="no-print">
+                <button type="button" class="btn-sm" data-quick-done="${esc(item.productId)}:${esc(
+                item.task.id
+              )}">Hoàn thành</button>
+              </td>`
+            : ''
+        }
       </tr>`;
     })
     .join('');
+
+  const legacyBanner =
+    editMode && legacyLocalCount > 0 && allProducts.length === 0
+      ? `<div class="pick-banner no-print" style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
+          <span>Phát hiện <strong>${legacyLocalCount}</strong> sản phẩm đã lưu trước đây trên trình duyệt này. Đồng bộ lên Cloud SQL để Sếp và team R&amp;D cùng xem được.</span>
+          <button type="button" class="btn-sm btn-pri" data-action="sync-legacy">Đồng bộ lên Cloud SQL</button>
+        </div>`
+      : '';
 
   return `
   <section class="print-header">
@@ -244,10 +256,12 @@ export function renderReportView(
     </div>
   </section>
 
+  ${legacyBanner}
+
   <div class="section-head no-print">
     <div>
-      <h2>Báo cáo tổng quan tiến độ</h2>
-      <p class="mut">Tổng hợp đa sản phẩm, tiến độ theo 7 giai đoạn, cảnh báo việc trễ và kết quả mẫu R&amp;D.</p>
+      <h2>Tổng quan tiến độ</h2>
+      <p class="mut">Báo cáo dùng chung cho Ban Giám đốc, team R&amp;D và các phòng ban theo dõi.</p>
     </div>
     <div class="toolbar-group">
       <div class="segmented" role="group" aria-label="Phạm vi chu kỳ">
@@ -288,7 +302,7 @@ export function renderReportView(
     <div class="kpi-cell">
       <div class="kpi-label">Mẫu R&amp;D đạt (Go)</div>
       <div class="kpi-val" style="color:var(--st-done)">${goSamples}<span class="kpi-sub">/${totalSamples}</span></div>
-      <div class="mut">Tổng số mã RD đang quản lý</div>
+      <div class="mut">Tổng số mã RD đang theo dõi</div>
     </div>
   </div>
 
@@ -296,7 +310,7 @@ export function renderReportView(
     <div class="panel-head">
       <div>
         <h3>Ma trận tiến độ sản phẩm theo 7 giai đoạn</h3>
-        <span class="mut">Bấm vào từng dòng sản phẩm để mở bảng timeline chỉnh sửa trực tiếp.</span>
+        <span class="mut">Bấm vào từng sản phẩm để xem timeline 13 tháng và mẫu R&amp;D chi tiết.</span>
       </div>
     </div>
     ${
@@ -317,14 +331,18 @@ export function renderReportView(
           </div>`
         : `<div class="empty-box">
             <p>Chưa có sản phẩm nào trong ${esc(cycleLabel)}.</p>
-            <div class="toolbar-group" style="justify-content:center;margin-top:12px">
-              <button type="button" class="btn-pri" data-action="new-product">+ Sản phẩm mới</button>
-              ${
-                allProducts.length === 0
-                  ? `<button type="button" class="btn" data-action="load-demo">Tải dữ liệu mẫu (2026–2027)</button>`
-                  : ''
-              }
-            </div>
+            ${
+              editMode
+                ? `<div class="toolbar-group" style="justify-content:center;margin-top:12px">
+                    <button type="button" class="btn-pri" data-action="new-product">+ Sản phẩm mới</button>
+                    ${
+                      allProducts.length === 0
+                        ? `<button type="button" class="btn" data-action="load-demo">Tải dữ liệu mẫu (2026–2027)</button>`
+                        : ''
+                    }
+                  </div>`
+                : `<p class="mut">Chuyển sang "Chế độ Nhập liệu" (nếu bạn có quyền chỉnh sửa) để thêm sản phẩm đầu tiên.</p>`
+            }
           </div>`
     }
   </div>
@@ -332,14 +350,14 @@ export function renderReportView(
   <div class="panel">
     <div class="panel-head">
       <div>
-        <h3>Danh sách việc cần xử lý (Trễ hạn &amp; Sắp đến hạn)</h3>
-        <span class="mut">Tổng hợp từ tất cả sản phẩm để rà soát trong buổi họp tiến độ.</span>
+        <h3>Việc trễ hạn &amp; sắp đến hạn</h3>
+        <span class="mut">Tổng hợp từ tất cả sản phẩm để rà soát nhanh trong buổi họp.</span>
       </div>
       <div class="toolbar-group no-print">
         <div class="segmented" role="group" aria-label="Bộ lọc công việc cảnh báo">
           <button type="button" class="${filter.actionFilter === 'all_risk' ? 'active' : ''}" data-rep-act="all_risk">Trễ &amp; Sắp hạn</button>
           <button type="button" class="${filter.actionFilter === 'late' ? 'active' : ''}" data-rep-act="late">Chỉ việc trễ</button>
-          <button type="button" class="${filter.actionFilter === 'milestone' ? 'active' : ''}" data-rep-act="milestone">Mốc chốt (Gate)</button>
+          <button type="button" class="${filter.actionFilter === 'milestone' ? 'active' : ''}" data-rep-act="milestone">Mốc chốt (◆)</button>
         </div>
         <select id="repPicFilter" class="select-auto" aria-label="Lọc theo PIC">
           <option value="">Tất cả PIC</option>
@@ -359,7 +377,7 @@ export function renderReportView(
                   <th>PIC</th>
                   <th class="num">Hạn</th>
                   <th>Tình trạng</th>
-                  <th class="no-print">Thao tác</th>
+                  ${editMode ? '<th class="no-print">Thao tác</th>' : ''}
                 </tr>
               </thead>
               <tbody>${actionRows}</tbody>
